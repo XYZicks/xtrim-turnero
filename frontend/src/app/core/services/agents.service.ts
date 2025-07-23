@@ -8,7 +8,7 @@ import { Agent, CreateAgentRequest, UpdateAgentStatusRequest } from '../models/a
   providedIn: 'root'
 })
 export class AgentsService {
-  private apiUrl = `${environment.apiUrl}/agent`;
+  private apiUrl = `${environment.authApiUrl}/agent`;
 
   constructor(private http: HttpClient) { }
 

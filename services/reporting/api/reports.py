@@ -6,6 +6,7 @@ from db import db
 import pandas as pd
 import io
 import json
+from logger_config import logger, log_process
 
 api = Namespace('reports', description='Reporting operations')
 
@@ -43,6 +44,7 @@ metrics_response = api.model('MetricsResponse', {
 class MetricsResource(Resource):
     @api.doc('get_metrics')
     @api.expect(report_params)
+    @log_process
     def get(self):
         """Get metrics for a date range"""
         # Parse parameters
@@ -51,13 +53,17 @@ class MetricsResource(Resource):
         end_date = request.args.get('end_date')
         format_type = request.args.get('format', 'json')
         
+        logger.info(f"Getting metrics with params: branch_id={branch_id}, start_date={start_date}, end_date={end_date}, format={format_type}")
+        
         if not start_date or not end_date:
+            logger.error("Missing required parameters: start_date and/or end_date")
             api.abort(400, "start_date and end_date are required")
         
         try:
             start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
             end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
         except ValueError:
+            logger.error(f"Invalid date format: start_date={start_date}, end_date={end_date}")
             api.abort(400, "Invalid date format. Use YYYY-MM-DD")
         
         # Build query
@@ -70,10 +76,12 @@ class MetricsResource(Resource):
             query = query.filter_by(branch_id=branch_id)
         
         reports = query.all()
+        logger.info(f"Found {len(reports)} reports for the specified period")
         
         # For CSV format, return a downloadable file
         if format_type == 'csv':
             if not reports:
+                logger.info("No data available for CSV export")
                 return Response("No data available for the selected period", 
                                mimetype='text/plain')
             
@@ -91,6 +99,7 @@ class MetricsResource(Resource):
                 mimetype='text/csv',
                 headers={'Content-Disposition': 'attachment; filename=report.csv'}
             )
+            logger.info(f"CSV report generated successfully with {len(data)} rows")
             return response
         
         # For JSON format, return aggregated metrics
@@ -123,7 +132,7 @@ class MetricsResource(Resource):
         # Format daily metrics
         daily_metrics = [report.to_dict() for report in reports]
         
-        return {
+        result = {
             'total_turns': total_turns,
             'completed_turns': completed_turns,
             'abandoned_turns': abandoned_turns,
@@ -133,3 +142,6 @@ class MetricsResource(Resource):
             'unique_customers': unique_customers,
             'daily_metrics': daily_metrics
         }
+        
+        logger.info(f"Metrics generated successfully: total_turns={total_turns}, completed={completed_turns}, abandoned={abandoned_turns}")
+        return result

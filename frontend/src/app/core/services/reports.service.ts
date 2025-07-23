@@ -8,7 +8,7 @@ import { Metrics, ReportParams } from '../models/report.model';
   providedIn: 'root'
 })
 export class ReportsService {
-  private apiUrl = `${environment.apiUrl}/reports`;
+  private apiUrl = `${environment.reportsApiUrl}/reports`;
 
   constructor(private http: HttpClient) { }
 

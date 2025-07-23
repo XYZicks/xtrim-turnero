@@ -1,214 +1,170 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
+import { MatButtonModule } from '@angular/material/button';
 import { MatRadioModule } from '@angular/material/radio';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { Store } from '@ngrx/store';
-import { Observable } from 'rxjs';
-
-import { createTurn } from '../../store/turns/turns.actions';
-import { selectTurnsLoading, selectTurnsError, selectCurrentTurn } from '../../store/turns/turns.selectors';
-import { Turn } from '../../core/models/turn.model';
+import { Router, ActivatedRoute } from '@angular/router';
+import { TurnsService } from '../../core/services/turns.service';
+import { CreateTurnRequest } from '../../core/models/turn.model';
 
 @Component({
   selector: 'app-booking',
   standalone: true,
   imports: [
     CommonModule,
-    FormsModule,
     ReactiveFormsModule,
     MatCardModule,
     MatFormFieldModule,
     MatInputModule,
-    MatButtonModule,
     MatSelectModule,
-    MatRadioModule,
-    MatProgressSpinnerModule
+    MatButtonModule,
+    MatRadioModule
   ],
   template: `
-    <div class="container">
-      <h1 class="page-title">Reservar Turno</h1>
+    <div class="container mx-auto px-4 py-8">
+      <h1 class="text-3xl font-bold text-xtrim-purple mb-6">Reservar Turno</h1>
       
-      <mat-card>
-        <mat-card-content>
-          <form [formGroup]="bookingForm" (ngSubmit)="onSubmit()">
-            <div class="form-section">
-              <h2>Tipo de Turno</h2>
-              <mat-radio-group formControlName="turn_type" class="turn-type-group">
-                <mat-radio-button value="normal">Normal</mat-radio-button>
-                <mat-radio-button value="preferential">Preferencial</mat-radio-button>
-              </mat-radio-group>
-            </div>
-            
-            <div class="form-section" *ngIf="showCustomerInfo()">
-              <h2>Información Personal</h2>
-              <mat-form-field class="full-width">
-                <mat-label>Nombre Completo</mat-label>
-                <input matInput formControlName="customer_name">
-                <mat-error *ngIf="bookingForm.get('customer_name')?.hasError('required')">
-                  Nombre es requerido
-                </mat-error>
-              </mat-form-field>
+      <div class="bg-white rounded-lg shadow-lg p-6">
+        <form [formGroup]="bookingForm" (ngSubmit)="onSubmit()" class="space-y-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <h2 class="text-xl font-semibold mb-4 text-xtrim-purple">Información del Turno</h2>
               
-              <mat-form-field class="full-width">
-                <mat-label>Cédula</mat-label>
-                <input matInput formControlName="customer_cedula">
-                <mat-error *ngIf="bookingForm.get('customer_cedula')?.hasError('required')">
-                  Cédula es requerida para turnos preferenciales
-                </mat-error>
-              </mat-form-field>
+              <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2">Tipo de Turno</label>
+                <mat-radio-group formControlName="turn_type" class="flex flex-col space-y-2">
+                  <mat-radio-button value="normal" class="text-gray-700">Normal</mat-radio-button>
+                  <mat-radio-button value="preferential" class="text-gray-700">Preferencial</mat-radio-button>
+                </mat-radio-group>
+                <p *ngIf="bookingForm.get('turn_type')?.value === 'preferential'" 
+                   class="text-sm text-gray-500 mt-1">
+                  Los turnos preferenciales son para adultos mayores, personas con discapacidad, 
+                  embarazadas o con niños en brazos.
+                </p>
+              </div>
               
-              <mat-form-field class="full-width">
-                <mat-label>Email</mat-label>
-                <input matInput formControlName="customer_email" type="email">
-                <mat-error *ngIf="bookingForm.get('customer_email')?.hasError('email')">
-                  Email inválido
-                </mat-error>
-              </mat-form-field>
+              <div class="mb-4">
+                <mat-form-field appearance="outline" class="w-full">
+                  <mat-label>Motivo de Visita</mat-label>
+                  <mat-select formControlName="reason">
+                    <mat-option value="soporte_tecnico">Soporte Técnico</mat-option>
+                    <mat-option value="facturacion">Facturación</mat-option>
+                    <mat-option value="nuevos_servicios">Nuevos Servicios</mat-option>
+                    <mat-option value="reclamos">Reclamos</mat-option>
+                    <mat-option value="otro">Otro</mat-option>
+                  </mat-select>
+                  <mat-error *ngIf="bookingForm.get('reason')?.hasError('required')">
+                    El motivo de visita es requerido
+                  </mat-error>
+                </mat-form-field>
+              </div>
             </div>
             
-            <div class="form-section">
-              <h2>Motivo de Visita</h2>
-              <mat-form-field class="full-width">
-                <mat-label>Seleccione un motivo</mat-label>
-                <mat-select formControlName="reason">
-                  <mat-option value="consulta">Consulta</mat-option>
-                  <mat-option value="pago">Pago</mat-option>
-                  <mat-option value="reclamo">Reclamo</mat-option>
-                  <mat-option value="soporte">Soporte Técnico</mat-option>
-                  <mat-option value="otro">Otro</mat-option>
-                </mat-select>
-                <mat-error *ngIf="bookingForm.get('reason')?.hasError('required')">
-                  Motivo es requerido
-                </mat-error>
-              </mat-form-field>
+            <div>
+              <h2 class="text-xl font-semibold mb-4 text-xtrim-purple">Información Personal</h2>
+              
+              <div class="mb-4">
+                <mat-form-field appearance="outline" class="w-full">
+                  <mat-label>Nombre Completo</mat-label>
+                  <input matInput formControlName="customer_name" placeholder="Ingrese su nombre completo">
+                </mat-form-field>
+              </div>
+              
+              <div class="mb-4">
+                <mat-form-field appearance="outline" class="w-full">
+                  <mat-label>Cédula</mat-label>
+                  <input matInput formControlName="customer_cedula" placeholder="Ingrese su número de cédula">
+                  <mat-error *ngIf="bookingForm.get('customer_cedula')?.hasError('required') && 
+                                   bookingForm.get('turn_type')?.value === 'preferential'">
+                    La cédula es requerida para turnos preferenciales
+                  </mat-error>
+                </mat-form-field>
+              </div>
+              
+              <div class="mb-4">
+                <mat-form-field appearance="outline" class="w-full">
+                  <mat-label>Correo Electrónico</mat-label>
+                  <input matInput formControlName="customer_email" placeholder="Ingrese su correo electrónico">
+                  <mat-error *ngIf="bookingForm.get('customer_email')?.hasError('email')">
+                    Ingrese un correo electrónico válido
+                  </mat-error>
+                </mat-form-field>
+              </div>
             </div>
-            
-            <div class="form-actions">
-              <button mat-raised-button color="primary" type="submit" [disabled]="bookingForm.invalid || (loading$ | async)">
-                <span *ngIf="!(loading$ | async)">Reservar Turno</span>
-                <mat-spinner diameter="24" *ngIf="loading$ | async"></mat-spinner>
-              </button>
-            </div>
-          </form>
-        </mat-card-content>
-      </mat-card>
+          </div>
+          
+          <div class="flex justify-center mt-6">
+            <button mat-raised-button color="primary" type="submit" 
+                    [disabled]="bookingForm.invalid" 
+                    class="px-8 py-2 bg-xtrim-purple text-white rounded-md hover:bg-opacity-90 transition-all">
+              Reservar Turno
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   `,
-  styles: [`
-    .form-section {
-      margin-bottom: 24px;
-    }
-    
-    .turn-type-group {
-      display: flex;
-      flex-direction: column;
-      margin: 15px 0;
-    }
-    
-    .form-actions {
-      display: flex;
-      justify-content: flex-end;
-    }
-    
-    mat-radio-button {
-      margin: 5px;
-    }
-    
-    h2 {
-      color: #E30613;
-      font-weight: 500;
-      margin-bottom: 16px;
-    }
-    
-    .page-title {
-      color: #E30613;
-      font-weight: 700;
-      margin-bottom: 24px;
-    }
-    
-    mat-card {
-      border-top: 4px solid #E30613;
-    }
-  `]
+  styles: []
 })
 export class BookingComponent implements OnInit {
   bookingForm: FormGroup;
-  loading$: Observable<boolean>;
-  error$: Observable<any>;
-  currentTurn$: Observable<Turn | null>;
-  branchId: number = 1; // Default branch ID, would normally come from QR code
+  
+  branchId = 1; // Default branch ID
   
   constructor(
     private fb: FormBuilder,
-    private store: Store,
-    private route: ActivatedRoute,
-    private router: Router
+    private turnsService: TurnsService,
+    private router: Router,
+    private route: ActivatedRoute
   ) {
     this.bookingForm = this.fb.group({
       turn_type: ['normal', Validators.required],
+      reason: ['', Validators.required],
       customer_name: [''],
       customer_cedula: [''],
-      customer_email: ['', Validators.email],
-      reason: ['', Validators.required]
+      customer_email: ['', [Validators.email]]
     });
     
-    this.loading$ = this.store.select(selectTurnsLoading);
-    this.error$ = this.store.select(selectTurnsError);
-    this.currentTurn$ = this.store.select(selectCurrentTurn);
+    // Add conditional validation for preferential turns
+    this.bookingForm.get('turn_type')?.valueChanges.subscribe(value => {
+      const cedulaControl = this.bookingForm.get('customer_cedula');
+      if (value === 'preferential') {
+        cedulaControl?.setValidators([Validators.required]);
+      } else {
+        cedulaControl?.clearValidators();
+      }
+      cedulaControl?.updateValueAndValidity();
+    });
   }
   
   ngOnInit(): void {
     // Get branch ID from query params if available
-    this.route.queryParams.subscribe(params => {
-      if (params['branchId']) {
-        this.branchId = +params['branchId'];
-      }
-    });
-    
-    // Update validators when turn type changes
-    this.bookingForm.get('turn_type')?.valueChanges.subscribe(value => {
-      const cedulaControl = this.bookingForm.get('customer_cedula');
-      const nameControl = this.bookingForm.get('customer_name');
-      
-      if (value === 'preferential') {
-        cedulaControl?.setValidators([Validators.required]);
-        nameControl?.setValidators([Validators.required]);
-      } else {
-        cedulaControl?.clearValidators();
-        nameControl?.clearValidators();
-      }
-      
-      cedulaControl?.updateValueAndValidity();
-      nameControl?.updateValueAndValidity();
-    });
-    
-    // Navigate to ticket page when turn is created
-    this.currentTurn$.subscribe(turn => {
-      if (turn) {
-        this.router.navigate(['/ticket', turn.id]);
-      }
-    });
+    const branchIdParam = this.route.snapshot.queryParamMap.get('branchId');
+    if (branchIdParam) {
+      this.branchId = parseInt(branchIdParam, 10) || 1;
+    }
   }
   
-  showCustomerInfo(): boolean {
-    return this.bookingForm.get('turn_type')?.value === 'preferential';
-  }
-  
-  onSubmit(): void {
+  onSubmit() {
     if (this.bookingForm.valid) {
-      const turnData = {
+      const turnData: CreateTurnRequest = {
         ...this.bookingForm.value,
         branch_id: this.branchId
       };
       
-      this.store.dispatch(createTurn({ turn: turnData }));
+      this.turnsService.createTurn(turnData).subscribe({
+        next: (response) => {
+          this.router.navigate(['/ticket', response.id]);
+        },
+        error: (error) => {
+          console.error('Error creating turn', error);
+          // Handle error (could add a snackbar or alert here)
+        }
+      });
     }
   }
 }

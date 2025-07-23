@@ -1,29 +1,54 @@
 #!/usr/bin/env python3
 import os
-import re
+import sys
 
-# Ruta al archivo api.py de flask_restx
-flask_restx_api_path = "/usr/local/lib/python3.12/site-packages/flask_restx/api.py"
+# Buscar el archivo api.py de flask_restx
+def find_flask_restx_api():
+    for path in sys.path:
+        api_path = os.path.join(path, 'flask_restx', 'api.py')
+        if os.path.exists(api_path):
+            return api_path
+    return None
+
+api_file = find_flask_restx_api()
+
+if not api_file:
+    print("No se pudo encontrar el archivo flask_restx/api.py")
+    sys.exit(1)
+
+print(f"Encontrado flask_restx/api.py en: {api_file}")
 
 # Leer el contenido del archivo
-with open(flask_restx_api_path, 'r') as file:
-    content = file.read()
+with open(api_file, 'r') as f:
+    content = f.read()
 
-# Reemplazar la línea problemática
-old_import = "from werkzeug import __version__ as werkzeug_version"
-new_import = "from werkzeug.__version__ import version as werkzeug_version"
+# Verificar si necesita parches
+if 'from werkzeug import __version__ as werkzeug_version' in content:
+    # Reemplazar la línea problemática
+    content = content.replace(
+        'from werkzeug import __version__ as werkzeug_version',
+        'try:\n    from werkzeug import __version__ as werkzeug_version\nexcept ImportError:\n    import werkzeug\n    werkzeug_version = getattr(werkzeug, "__version__", "0.0.0")'
+    )
+    print("Parche aplicado para werkzeug_version")
 
-# Verificar si werkzeug.__version__ existe, si no, usar otra alternativa
-try:
-    import werkzeug.__version__
-    patched_content = content.replace(old_import, new_import)
-except ImportError:
-    # Alternativa si werkzeug.__version__ no existe
-    new_import = "import werkzeug\ntry:\n    werkzeug_version = werkzeug.__version__\nexcept AttributeError:\n    from werkzeug import __version__ as werkzeug_version\nexcept ImportError:\n    werkzeug_version = '0.0.0'"
-    patched_content = content.replace(old_import, new_import)
+if 'from werkzeug.wrappers import BaseResponse' in content:
+    # Reemplazar la línea problemática de BaseResponse
+    content = content.replace(
+        'from werkzeug.wrappers import BaseResponse',
+        'try:\n    from werkzeug.wrappers import BaseResponse\nexcept ImportError:\n    from werkzeug.wrappers.response import Response as BaseResponse'
+    )
+    print("Parche aplicado para BaseResponse")
+
+# Corregir posibles errores de indentación en los bloques try-except
+content = content.replace('try:\nfrom werkzeug', 'try:\n    from werkzeug')
+content = content.replace('try:\n from werkzeug', 'try:\n    from werkzeug')
+content = content.replace('except ImportError:\nimport werkzeug', 'except ImportError:\n    import werkzeug')
+content = content.replace('except ImportError:\n import werkzeug', 'except ImportError:\n    import werkzeug')
+content = content.replace('except ImportError:\nfrom werkzeug', 'except ImportError:\n    from werkzeug')
+content = content.replace('except ImportError:\n from werkzeug', 'except ImportError:\n    from werkzeug')
 
 # Escribir el contenido modificado
-with open(flask_restx_api_path, 'w') as file:
-    file.write(patched_content)
+with open(api_file, 'w') as f:
+    f.write(content)
 
-print("Patch aplicado correctamente.")
+print("Archivo flask_restx/api.py parcheado correctamente.")

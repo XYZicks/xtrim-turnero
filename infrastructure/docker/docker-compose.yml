@@ -25,10 +25,13 @@ services:
     environment:
       - DATABASE_URI=postgresql://postgres:postgres@db:5432/turns
       - DEBUG=true
+      - LOG_LEVEL=INFO
+      - LOG_FILE=/app/logs/turns.log
     ports:
       - "5000:5000"
     volumes:
       - ../../services/turns:/app
+      - turns_logs:/app/logs
     restart: unless-stopped
 
   agents-service:
@@ -39,10 +42,13 @@ services:
     environment:
       - DATABASE_URI=postgresql://postgres:postgres@db:5432/agents
       - DEBUG=true
+      - LOG_LEVEL=INFO
+      - LOG_FILE=/app/logs/agents.log
     ports:
       - "5001:5001"
     volumes:
       - ../../services/agents:/app
+      - agents_logs:/app/logs
     restart: unless-stopped
 
   reporting-service:
@@ -53,11 +59,17 @@ services:
     environment:
       - DATABASE_URI=postgresql://postgres:postgres@db:5432/reporting
       - DEBUG=true
+      - LOG_LEVEL=INFO
+      - LOG_FILE=/app/logs/reporting.log
     ports:
       - "5002:5002"
     volumes:
       - ../../services/reporting:/app
+      - reporting_logs:/app/logs
     restart: unless-stopped
 
 volumes:
   postgres_data:
+  reporting_logs:
+  turns_logs:
+  agents_logs:

@@ -1,6 +1,28 @@
 import os
-from flask import Flask
-from flask_restx import Api
+import sys
+
+# Asegurarse de que werkzeug y flask-restx estén correctamente importados
+try:
+    import werkzeug
+    print(f"Werkzeug version: {werkzeug.__version__}")
+except Exception as e:
+    print(f"Error importing werkzeug: {e}")
+    sys.exit(1)
+
+try:
+    from flask import Flask
+    print(f"Flask imported successfully")
+except Exception as e:
+    print(f"Error importing Flask: {e}")
+    sys.exit(1)
+
+try:
+    from flask_restx import Api
+    print(f"Flask-RESTX imported successfully")
+except Exception as e:
+    print(f"Error importing flask_restx: {e}")
+    sys.exit(1)
+
 from dotenv import load_dotenv
 from api.turns import api as turns_ns
 from api.queue import api as queue_ns
@@ -31,12 +53,13 @@ def create_app():
     api.add_namespace(turns_ns, path='/turns')
     api.add_namespace(queue_ns, path='/queue')
     
-    @app.before_first_request
-    def create_tables():
+    with app.app_context():
         db.create_all()
     
     return app
 
+# Crear la aplicación al nivel del módulo para gunicorn
+app = create_app()
+
 if __name__ == '__main__':
-    app = create_app()
     app.run(debug=os.getenv('DEBUG', 'False').lower() == 'true', host='0.0.0.0', port=int(os.getenv('PORT', 5000)))

@@ -3,6 +3,7 @@ from flask import request
 from flask_restx import Namespace, Resource, fields
 from models.agent import Agent, AgentStatus, UnavailabilityReason
 from db import db
+from logger_config import logger, log_process
 
 api = Namespace('agents', description='Agent operations')
 
@@ -38,12 +39,14 @@ class AgentList(Resource):
     @api.doc('create_agent')
     @api.expect(agent_model)
     @api.marshal_with(agent_response, code=201)
+    @log_process
     def post(self):
         """Create a new agent"""
         data = request.json
         
         # Check if agent with email already exists
         if Agent.query.filter_by(email=data['email']).first():
+            logger.error(f"Agent with email {data['email']} already exists")
             api.abort(400, "Agent with this email already exists")
         
         # Create agent
@@ -55,15 +58,18 @@ class AgentList(Resource):
         
         db.session.add(agent)
         db.session.commit()
+        logger.info(f"Agent created with ID {agent.id} and email {agent.email}")
         
         return agent.to_dict(), 201
     
     @api.doc('list_agents')
     @api.marshal_list_with(agent_response)
+    @log_process
     def get(self):
         """List all agents"""
         branch_id = request.args.get('branch_id')
         status = request.args.get('status')
+        logger.info(f"Listing agents with filters: branch_id={branch_id}, status={status}")
         
         query = Agent.query
         
@@ -81,9 +87,11 @@ class AgentList(Resource):
 class AgentResource(Resource):
     @api.doc('get_agent')
     @api.marshal_with(agent_response)
+    @log_process
     def get(self, id):
         """Get an agent by ID"""
         agent = Agent.query.get_or_404(id)
+        logger.info(f"Retrieved agent with ID {id}")
         return agent.to_dict()
 
 @api.route('/<int:id>/status')
@@ -92,10 +100,12 @@ class AgentStatusResource(Resource):
     @api.doc('update_agent_status')
     @api.expect(agent_status_model)
     @api.marshal_with(agent_response)
+    @log_process
     def patch(self, id):
         """Update an agent's status"""
         agent = Agent.query.get_or_404(id)
         data = request.json
+        logger.info(f"Updating agent {id} status to {data['status']}")
         
         # Update status
         agent.status = data['status']
@@ -110,5 +120,6 @@ class AgentStatusResource(Resource):
             agent.unavailability_reason = None
         
         db.session.commit()
+        logger.info(f"Agent {id} status updated successfully")
         
         return agent.to_dict()

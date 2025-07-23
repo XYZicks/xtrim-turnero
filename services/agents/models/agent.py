@@ -11,12 +11,18 @@ class UnavailabilityReason:
     CONSULTATION = 'consulta_jefe'
     OTHER = 'otro'
 
+class AgentRole:
+    AGENT = 'AGENTE'
+    SUPERVISOR = 'SUPERVISOR'
+
 class Agent(db.Model):
     __tablename__ = 'agents'
     
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(100), nullable=False, unique=True)
+    password = db.Column(db.String(255), nullable=True)  # Nullable para compatibilidad con datos existentes
+    role = db.Column(db.String(20), nullable=False, default=AgentRole.AGENT)
     branch_id = db.Column(db.Integer, nullable=False)
     status = db.Column(db.String(20), nullable=False, default=AgentStatus.AVAILABLE)
     unavailability_reason = db.Column(db.String(50), nullable=True)
@@ -34,6 +40,7 @@ class Agent(db.Model):
             'id': self.id,
             'name': self.name,
             'email': self.email,
+            'role': self.role,
             'branch_id': self.branch_id,
             'status': self.status,
             'unavailability_reason': self.unavailability_reason,

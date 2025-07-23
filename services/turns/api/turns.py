@@ -5,6 +5,7 @@ from models.turn import Turn, TurnStatus, TurnType
 from db import db
 import random
 import string
+from logger_config import logger, log_process
 
 api = Namespace('turns', description='Turn operations')
 
@@ -35,6 +36,7 @@ turn_update = api.model('TurnUpdate', {
     'agent_id': fields.Integer(required=False, description='Agent ID')
 })
 
+@log_process
 def generate_ticket_number():
     """Generate a unique ticket number"""
     letters = ''.join(random.choices(string.ascii_uppercase, k=2))
@@ -46,12 +48,14 @@ class TurnList(Resource):
     @api.doc('create_turn')
     @api.expect(turn_model)
     @api.marshal_with(turn_response, code=201)
+    @log_process
     def post(self):
         """Create a new turn"""
         data = request.json
         
         # Validate preferential turn has cedula
         if data['turn_type'] == TurnType.PREFERENTIAL and not data.get('customer_cedula'):
+            logger.error(f"Preferential turn missing cedula: {data}")
             api.abort(400, "Preferential turns require customer cedula")
         
         # Generate ticket number
@@ -70,6 +74,7 @@ class TurnList(Resource):
         
         db.session.add(turn)
         db.session.commit()
+        logger.info(f"Turn created with ID {turn.id} and ticket {ticket_number}")
         
         # Calculate estimated wait time (simplified for MVP)
         waiting_turns = Turn.query.filter_by(
@@ -90,9 +95,11 @@ class TurnList(Resource):
 class TurnResource(Resource):
     @api.doc('get_turn')
     @api.marshal_with(turn_response)
+    @log_process
     def get(self, id):
         """Get a turn by ID"""
         turn = Turn.query.get_or_404(id)
+        logger.info(f"Retrieved turn with ID {id}")
         
         # Calculate estimated wait time (simplified for MVP)
         waiting_turns_ahead = Turn.query.filter(
@@ -122,10 +129,12 @@ class TurnResource(Resource):
     @api.doc('update_turn')
     @api.expect(turn_update)
     @api.marshal_with(turn_response)
+    @log_process
     def patch(self, id):
         """Update a turn's status"""
         turn = Turn.query.get_or_404(id)
         data = request.json
+        logger.info(f"Updating turn {id} status to {data['status']}")
         
         # Update status
         turn.status = data['status']
@@ -138,5 +147,6 @@ class TurnResource(Resource):
             turn.completed_at = datetime.utcnow()
         
         db.session.commit()
+        logger.info(f"Turn {id} updated successfully")
         
         return turn.to_dict()

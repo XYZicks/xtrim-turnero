@@ -1,6 +1,12 @@
-Flask==2.3.3
+Flask==2.0.3
 flask-restx==1.1.0
-SQLAlchemy==2.0.23
+SQLAlchemy==1.4.46
+flask-sqlalchemy==2.5.1
+werkzeug==2.0.3
+markupsafe==2.0.1
+numpy==1.26.4
+itsdangerous==2.0.1
+jinja2==3.0.3
 psycopg2-binary==2.9.9
 python-dotenv==1.0.0
 alembic==1.12.1
@@ -8,3 +14,5 @@ pytest==7.4.3
 gunicorn==21.2.0
 pyjwt==2.8.0
 pandas==2.1.1
+setuptools==65.5.0
+loguru==0.7.2

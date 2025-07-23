@@ -20,6 +20,8 @@ Xtrim Turnero es una aplicación web para la gestión de turnos en agencias Xtri
 /services/agents              – Disponibilidad y estado de asesores
 /services/reporting           – Métricas y exportación CSV
 /infrastructure/docker        – Archivos Docker Compose
+LOGGING.md                    – Documentación de logs
+check_logs.sh                 – Script para verificar logs
 ```
 
 ## Requisitos
@@ -56,6 +58,10 @@ yarn start
 ```
 
 La aplicación estará disponible en `http://localhost:4200`.
+
+## Logs
+
+El sistema implementa un sistema de logs completo con Loguru. Para más detalles, consulte [LOGGING.md](LOGGING.md).
 
 ## Licencia
 

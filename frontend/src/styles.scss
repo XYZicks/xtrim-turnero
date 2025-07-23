@@ -1,18 +1,23 @@
 /* You can add global styles to this file, and also import other style files */
 @use '@angular/material' as mat;
 
+/* Tailwind CSS */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 // Define the brand colors
 $xtrim-primary: (
-  50: lighten(#E30613, 40%),
-  100: lighten(#E30613, 35%),
-  200: lighten(#E30613, 30%),
-  300: lighten(#E30613, 25%),
-  400: lighten(#E30613, 15%),
-  500: #E30613, // Primary color - Rojo Xtrim
-  600: darken(#E30613, 5%),
-  700: darken(#E30613, 10%),
-  800: darken(#E30613, 15%),
-  900: darken(#E30613, 20%),
+  50: lighten(#402063, 40%),
+  100: lighten(#402063, 35%),
+  200: lighten(#402063, 30%),
+  300: lighten(#402063, 25%),
+  400: lighten(#402063, 15%),
+  500: #402063, // Primary color - Morado Xtrim
+  600: darken(#402063, 5%),
+  700: darken(#402063, 10%),
+  800: darken(#402063, 15%),
+  900: darken(#402063, 20%),
   contrast: (
     50: rgba(black, 0.87),
     100: rgba(black, 0.87),
@@ -156,6 +161,6 @@ body {
 }
 
 .page-title {
-  color: #E30613;
+  color: #402063;
   margin-bottom: 24px;
 }
