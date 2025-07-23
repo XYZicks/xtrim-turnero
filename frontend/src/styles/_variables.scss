@@ -1,0 +1,58 @@
+// Paleta de colores Xtrim
+$xtrim-primary: #E30613; // Rojo Xtrim
+$xtrim-secondary: #000000; // Negro
+$xtrim-accent: #0071BC; // Azul
+$xtrim-light: #FFFFFF; // Blanco
+$xtrim-gray: #F2F2F2; // Gris claro
+$xtrim-dark-gray: #333333; // Gris oscuro
+
+// Material Design Theme
+$primary-palette: (
+  50: lighten($xtrim-primary, 40%),
+  100: lighten($xtrim-primary, 30%),
+  200: lighten($xtrim-primary, 20%),
+  300: lighten($xtrim-primary, 10%),
+  400: lighten($xtrim-primary, 5%),
+  500: $xtrim-primary,
+  600: darken($xtrim-primary, 5%),
+  700: darken($xtrim-primary, 10%),
+  800: darken($xtrim-primary, 15%),
+  900: darken($xtrim-primary, 20%),
+  contrast: (
+    50: $xtrim-secondary,
+    100: $xtrim-secondary,
+    200: $xtrim-secondary,
+    300: $xtrim-light,
+    400: $xtrim-light,
+    500: $xtrim-light,
+    600: $xtrim-light,
+    700: $xtrim-light,
+    800: $xtrim-light,
+    900: $xtrim-light,
+  )
+);
+
+$accent-palette: (
+  50: lighten($xtrim-accent, 40%),
+  100: lighten($xtrim-accent, 30%),
+  200: lighten($xtrim-accent, 20%),
+  300: lighten($xtrim-accent, 10%),
+  400: lighten($xtrim-accent, 5%),
+  500: $xtrim-accent,
+  600: darken($xtrim-accent, 5%),
+  700: darken($xtrim-accent, 10%),
+  800: darken($xtrim-accent, 15%),
+  900: darken($xtrim-accent, 20%),
+  contrast: (
+    50: $xtrim-secondary,
+    100: $xtrim-secondary,
+    200: $xtrim-secondary,
+    300: $xtrim-light,
+    400: $xtrim-light,
+    500: $xtrim-light,
+    600: $xtrim-light,
+    700: $xtrim-light,
+    800: $xtrim-light,
+    900: $xtrim-light,
+  )
+);

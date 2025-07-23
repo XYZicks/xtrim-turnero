@@ -1,0 +1,336 @@
+{
+  "info": {
+    "_postman_id": "a1b2c3d4-e5f6-g7h8-i9j0-k1l2m3n4o5p6",
+    "name": "Xtrim Turnero API",
+    "description": "API collection for Xtrim Turnero application",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Turns Service",
+      "item": [
+        {
+          "name": "Create Turn",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"branch_id\": 1,\n    \"turn_type\": \"normal\",\n    \"reason\": \"Consulta\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5000/turns",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5000",
+              "path": [
+                "turns"
+              ]
+            },
+            "description": "Create a new turn"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Preferential Turn",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"branch_id\": 1,\n    \"turn_type\": \"preferential\",\n    \"reason\": \"Consulta\",\n    \"customer_name\": \"Juan Perez\",\n    \"customer_cedula\": \"12345678\",\n    \"customer_email\": \"juan@example.com\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5000/turns",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5000",
+              "path": [
+                "turns"
+              ]
+            },
+            "description": "Create a new preferential turn"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Turn",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5000/turns/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5000",
+              "path": [
+                "turns",
+                "1"
+              ]
+            },
+            "description": "Get a turn by ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Turn Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"status\": \"attending\",\n    \"agent_id\": 1\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5000/turns/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5000",
+              "path": [
+                "turns",
+                "1"
+              ]
+            },
+            "description": "Update a turn's status"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Queue",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5000/queue/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5000",
+              "path": [
+                "queue",
+                "1"
+              ]
+            },
+            "description": "Get the queue for a branch"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Agents Service",
+      "item": [
+        {
+          "name": "Create Agent",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Maria Rodriguez\",\n    \"email\": \"maria@xtrim.com\",\n    \"branch_id\": 1\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5001/agent",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5001",
+              "path": [
+                "agent"
+              ]
+            },
+            "description": "Create a new agent"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Agents",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5001/agent?branch_id=1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5001",
+              "path": [
+                "agent"
+              ],
+              "query": [
+                {
+                  "key": "branch_id",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "Get all agents for a branch"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Agent",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5001/agent/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5001",
+              "path": [
+                "agent",
+                "1"
+              ]
+            },
+            "description": "Get an agent by ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Agent Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"status\": \"no_disponible\",\n    \"unavailability_reason\": \"almuerzo\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5001/agent/1/status",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5001",
+              "path": [
+                "agent",
+                "1",
+                "status"
+              ]
+            },
+            "description": "Update an agent's status"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Reporting Service",
+      "item": [
+        {
+          "name": "Get Metrics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5002/reports/metrics?start_date=2023-01-01&end_date=2023-01-31&branch_id=1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5002",
+              "path": [
+                "reports",
+                "metrics"
+              ],
+              "query": [
+                {
+                  "key": "start_date",
+                  "value": "2023-01-01"
+                },
+                {
+                  "key": "end_date",
+                  "value": "2023-01-31"
+                },
+                {
+                  "key": "branch_id",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "Get metrics for a date range"
+          },
+          "response": []
+        },
+        {
+          "name": "Download CSV Report",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5002/reports/metrics?start_date=2023-01-01&end_date=2023-01-31&branch_id=1&format=csv",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5002",
+              "path": [
+                "reports",
+                "metrics"
+              ],
+              "query": [
+                {
+                  "key": "start_date",
+                  "value": "2023-01-01"
+                },
+                {
+                  "key": "end_date",
+                  "value": "2023-01-31"
+                },
+                {
+                  "key": "branch_id",
+                  "value": "1"
+                },
+                {
+                  "key": "format",
+                  "value": "csv"
+                }
+              ]
+            },
+            "description": "Download a CSV report for a date range"
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

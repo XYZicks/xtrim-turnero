@@ -1,0 +1,9 @@
+Flask==2.3.3
+flask-restx==1.1.0
+SQLAlchemy==2.0.23
+psycopg2-binary==2.9.9
+python-dotenv==1.0.0
+alembic==1.12.1
+pytest==7.4.3
+gunicorn==21.2.0
+pyjwt==2.8.0
