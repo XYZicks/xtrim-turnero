@@ -7,7 +7,14 @@ from flask import Flask, request, jsonify
 from flask_restx import Api
 from flask_cors import CORS
 
-from logger_config import logger
+load_dotenv()
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
+
+from common.logger import configure_logger, logger
+
+configure_logger("turns")
+
 from api.turns import api as turns_ns
 from api.queue import api as queue_ns
 from db import db

@@ -3,7 +3,7 @@ from flask import request
 from flask_restx import Namespace, Resource, fields
 from models.agent import Agent, AgentStatus, UnavailabilityReason
 from db import db
-from logger_config import logger, log_process
+from common.logger import logger, log_process
 
 api = Namespace('agents', description='Agent operations')
 
