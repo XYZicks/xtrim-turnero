@@ -6,7 +6,7 @@ from db import db
 import pandas as pd
 import io
 import json
-from common.logger import logger, log_process
+from logger_config import logger, log_process
 
 api = Namespace('reports', description='Reporting operations')
 
