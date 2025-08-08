@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -11,8 +11,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { CdkDragDrop, moveItemInArray, DragDropModule } from '@angular/cdk/drag-drop';
 import { Store } from '@ngrx/store';
-import { Observable, interval } from 'rxjs';
-import { startWith } from 'rxjs/operators';
+import { Observable, interval, Subscription } from 'rxjs';
 
 import { getQueue } from '../../store/turns/turns.actions';
 import { getAgents } from '../../store/agents/agents.actions';
@@ -330,11 +329,12 @@ import { Agent } from '../../core/models/agent.model';
     }
   `]
 })
-export class SupervisorComponent implements OnInit {
+export class SupervisorComponent implements OnInit, OnDestroy {
   queue$: Observable<Queue | null>;
   agents$: Observable<Agent[]>;
   turnsLoading$: Observable<boolean>;
   agentsLoading$: Observable<boolean>;
+  private refreshSubscription?: Subscription;
   
   // Mock branch ID for demo purposes
   branchId: number = 1;
@@ -350,17 +350,35 @@ export class SupervisorComponent implements OnInit {
   }
   
   ngOnInit(): void {
+    console.log('Supervisor: Component initialized');
+    
+    // Subscribe to queue changes for debugging
+    this.queue$.subscribe(queue => {
+      console.log('Supervisor: Queue data updated', queue);
+    });
+    
+    // Subscribe to agents changes for debugging
+    this.agents$.subscribe(agents => {
+      console.log('Supervisor: Agents data updated', agents);
+    });
+    
+    // Initial data load
     this.refreshData();
     
-    // Auto-refresh data every 10 seconds
-    interval(10000).pipe(
-      startWith(0)
-    ).subscribe(() => {
+    // Auto-refresh data every 5 seconds
+    this.refreshSubscription = interval(5000).subscribe(() => {
       this.refreshData();
     });
   }
   
+  ngOnDestroy(): void {
+    if (this.refreshSubscription) {
+      this.refreshSubscription.unsubscribe();
+    }
+  }
+  
   refreshData(): void {
+    console.log('Supervisor: Refreshing data for branch', this.branchId);
     this.store.dispatch(getQueue({ branchId: this.branchId }));
     this.store.dispatch(getAgents({ branchId: this.branchId }));
   }

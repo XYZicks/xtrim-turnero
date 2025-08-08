@@ -5,6 +5,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { TurnsService } from '../../core/services/turns.service';
 import { Turn } from '../../core/models/turn.model';
 import { interval, Subscription } from 'rxjs';
@@ -19,14 +20,18 @@ import { switchMap } from 'rxjs/operators';
     MatCardModule,
     MatButtonModule,
     MatIconModule,
-    MatDividerModule
+    MatDividerModule,
+    MatSnackBarModule
   ],
   template: `
     <div class="container mx-auto px-4 py-8">
       <div class="max-w-md mx-auto">
         <div class="bg-white rounded-lg shadow-lg overflow-hidden">
           <!-- Ticket Header -->
-          <div class="bg-xtrim-purple text-white p-6 text-center">
+          <div class="bg-xtrim-purple text-white p-6 text-center relative">
+            <div class="absolute top-2 right-2" *ngIf="turn?.status === 'waiting'">
+              <div class="w-3 h-3 bg-green-400 rounded-full animate-pulse" title="Actualizando automáticamente"></div>
+            </div>
             <h1 class="text-3xl font-bold mb-2">Turno</h1>
             <div class="text-5xl font-bold mb-2">{{ turn?.ticket_number }}</div>
             <p class="text-lg">
@@ -65,31 +70,35 @@ import { switchMap } from 'rxjs/operators';
               <div class="font-semibold">{{ turn?.created_at | date:'dd/MM/yyyy HH:mm' }}</div>
             </div>
             
-            <div *ngIf="turn?.status === 'attending'" class="mt-6 p-4 bg-blue-50 rounded-lg">
+            <div *ngIf="turn?.status === 'attending'" class="mt-6 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-400">
               <div class="text-center text-blue-800">
-                <mat-icon class="align-middle mr-2">person</mat-icon>
-                <span>Su turno está siendo atendido</span>
+                <mat-icon class="align-middle mr-2 animate-pulse">person</mat-icon>
+                <span class="font-semibold">¡Su turno está siendo atendido!</span>
+                <div class="text-sm mt-1">Diríjase al mostrador correspondiente</div>
               </div>
             </div>
             
-            <div *ngIf="turn?.status === 'waiting'" class="mt-6 p-4 bg-yellow-50 rounded-lg">
+            <div *ngIf="turn?.status === 'waiting'" class="mt-6 p-4 bg-yellow-50 rounded-lg border-l-4 border-yellow-400">
               <div class="text-center text-yellow-800">
                 <mat-icon class="align-middle mr-2">schedule</mat-icon>
                 <span>Por favor espere a ser llamado</span>
+                <div class="text-sm mt-1">Su turno se actualiza automáticamente</div>
               </div>
             </div>
             
-            <div *ngIf="turn?.status === 'completed'" class="mt-6 p-4 bg-green-50 rounded-lg">
+            <div *ngIf="turn?.status === 'completed'" class="mt-6 p-4 bg-green-50 rounded-lg border-l-4 border-green-400">
               <div class="text-center text-green-800">
                 <mat-icon class="align-middle mr-2">check_circle</mat-icon>
-                <span>Su turno ha sido completado</span>
+                <span class="font-semibold">Su turno ha sido completado</span>
+                <div class="text-sm mt-1">Gracias por su visita</div>
               </div>
             </div>
             
-            <div *ngIf="turn?.status === 'abandoned'" class="mt-6 p-4 bg-red-50 rounded-lg">
+            <div *ngIf="turn?.status === 'abandoned'" class="mt-6 p-4 bg-red-50 rounded-lg border-l-4 border-red-400">
               <div class="text-center text-red-800">
                 <mat-icon class="align-middle mr-2">error</mat-icon>
-                <span>Su turno ha sido abandonado</span>
+                <span class="font-semibold">Su turno ha sido cancelado</span>
+                <div class="text-sm mt-1">Puede solicitar un nuevo turno si lo desea</div>
               </div>
             </div>
           </div>
@@ -109,7 +118,46 @@ import { switchMap } from 'rxjs/operators';
       </div>
     </div>
   `,
-  styles: []
+  styles: [`
+    .animate-pulse {
+      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: .5;
+      }
+    }
+    
+    .bg-xtrim-purple {
+      background-color: #402063;
+    }
+    
+    .status-transition {
+      transition: all 0.3s ease-in-out;
+    }
+    
+    :host ::ng-deep .success-snackbar {
+      background-color: #4caf50 !important;
+      color: white !important;
+    }
+    
+    :host ::ng-deep .error-snackbar {
+      background-color: #f44336 !important;
+      color: white !important;
+    }
+    
+    :host ::ng-deep .success-snackbar .mat-simple-snackbar-action {
+      color: white !important;
+    }
+    
+    :host ::ng-deep .error-snackbar .mat-simple-snackbar-action {
+      color: white !important;
+    }
+  `]
 })
 export class TicketComponent implements OnInit, OnDestroy {
   turn: Turn | null = null;
@@ -117,40 +165,57 @@ export class TicketComponent implements OnInit, OnDestroy {
   
   constructor(
     private route: ActivatedRoute,
-    private turnsService: TurnsService
+    private turnsService: TurnsService,
+    private snackBar: MatSnackBar
   ) {}
   
   ngOnInit(): void {
     const turnId = this.route.snapshot.paramMap.get('id');
     
     if (turnId) {
-      // Initial load
-      this.turnsService.getTurn(+turnId).subscribe({
-        next: (turn) => {
-          this.turn = turn;
-        },
-        error: (error) => {
-          console.error('Error fetching turn', error);
-        }
-      });
-      
-      // Refresh every 30 seconds if turn is in waiting status
-      this.refreshSubscription = interval(30000).pipe(
-        switchMap(() => this.turnsService.getTurn(+turnId))
-      ).subscribe({
-        next: (turn) => {
-          this.turn = turn;
-          
-          // Stop polling if turn is no longer waiting
-          if (turn.status !== 'waiting' && this.refreshSubscription) {
-            this.refreshSubscription.unsubscribe();
-          }
-        },
-        error: (error) => {
-          console.error('Error refreshing turn', error);
-        }
-      });
+      console.log('Ticket: Component initialized for turn', turnId);
+      this.loadTurnData(+turnId);
+      this.startPolling(+turnId);
     }
+  }
+  
+  private loadTurnData(turnId: number): void {
+    this.turnsService.getTurn(turnId).subscribe({
+      next: (turn) => {
+        console.log('Ticket: Turn data loaded', turn);
+        this.turn = turn;
+      },
+      error: (error) => {
+        console.error('Ticket: Error fetching turn', error);
+      }
+    });
+  }
+  
+  private startPolling(turnId: number): void {
+    // Poll every 5 seconds for more responsive updates
+    this.refreshSubscription = interval(5000).pipe(
+      switchMap(() => this.turnsService.getTurn(turnId))
+    ).subscribe({
+      next: (turn) => {
+        const previousStatus = this.turn?.status;
+        this.turn = turn;
+        
+        // Show notification on status change
+        if (previousStatus && previousStatus !== turn.status) {
+          console.log(`Ticket: Status changed from ${previousStatus} to ${turn.status}`);
+          this.showStatusChangeNotification(turn.status);
+        }
+        
+        // Stop polling if turn is completed or abandoned
+        if ((turn.status === 'completed' || turn.status === 'abandoned') && this.refreshSubscription) {
+          console.log('Ticket: Stopping polling - turn is', turn.status);
+          this.refreshSubscription.unsubscribe();
+        }
+      },
+      error: (error) => {
+        console.error('Ticket: Error refreshing turn', error);
+      }
+    });
   }
   
   ngOnDestroy(): void {
@@ -181,6 +246,35 @@ export class TicketComponent implements OnInit, OnDestroy {
       case 'reclamos': return 'Reclamos';
       case 'otro': return 'Otro';
       default: return this.turn?.reason || '';
+    }
+  }
+  
+  private showStatusChangeNotification(status: string): void {
+    let message = '';
+    let panelClass = '';
+    
+    switch (status) {
+      case 'attending':
+        message = '¡Su turno está siendo atendido! Diríjase al mostrador.';
+        panelClass = 'success-snackbar';
+        break;
+      case 'completed':
+        message = 'Su turno ha sido completado. ¡Gracias por su visita!';
+        panelClass = 'success-snackbar';
+        break;
+      case 'abandoned':
+        message = 'Su turno ha sido cancelado.';
+        panelClass = 'error-snackbar';
+        break;
+    }
+    
+    if (message) {
+      this.snackBar.open(message, 'Cerrar', {
+        duration: 8000,
+        panelClass: [panelClass],
+        horizontalPosition: 'center',
+        verticalPosition: 'top'
+      });
     }
   }
 }

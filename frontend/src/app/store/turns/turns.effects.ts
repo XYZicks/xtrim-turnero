@@ -40,12 +40,19 @@ export class TurnsEffects {
   
   getQueue$ = createEffect(() => this.actions$.pipe(
     ofType(TurnsActions.getQueue),
-    mergeMap(({ branchId }) => 
-      this.turnsService.getQueue(branchId).pipe(
-        map(queue => TurnsActions.getQueueSuccess({ queue })),
-        catchError(error => of(TurnsActions.getQueueFailure({ error })))
-      )
-    )
+    mergeMap(({ branchId }) => {
+      console.log('Effect: getQueue called for branch', branchId);
+      return this.turnsService.getQueue(branchId).pipe(
+        map(queue => {
+          console.log('Effect: getQueue HTTP response', queue);
+          return TurnsActions.getQueueSuccess({ queue });
+        }),
+        catchError(error => {
+          console.error('Effect: getQueue HTTP error', error);
+          return of(TurnsActions.getQueueFailure({ error }));
+        })
+      );
+    })
   ));
   
   constructor(

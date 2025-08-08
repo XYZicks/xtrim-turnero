@@ -72,19 +72,28 @@ export const reducer = createReducer(
   })),
   
   // Get Queue
-  on(TurnsActions.getQueue, state => ({
-    ...state,
-    loading: true,
-    error: null
-  })),
-  on(TurnsActions.getQueueSuccess, (state, { queue }) => ({
-    ...state,
-    queue,
-    loading: false
-  })),
-  on(TurnsActions.getQueueFailure, (state, { error }) => ({
-    ...state,
-    error,
-    loading: false
-  }))
+  on(TurnsActions.getQueue, state => {
+    console.log('Reducer: getQueue action received');
+    return {
+      ...state,
+      loading: true,
+      error: null
+    };
+  }),
+  on(TurnsActions.getQueueSuccess, (state, { queue }) => {
+    console.log('Reducer: getQueueSuccess action received', queue);
+    return {
+      ...state,
+      queue,
+      loading: false
+    };
+  }),
+  on(TurnsActions.getQueueFailure, (state, { error }) => {
+    console.log('Reducer: getQueueFailure action received', error);
+    return {
+      ...state,
+      error,
+      loading: false
+    };
+  })
 );
