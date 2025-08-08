@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { RouterModule } from '@angular/router';
+import { QRCodeSVGModule } from 'ngx-qrcode-svg';
 
 @Component({
   selector: 'app-home',
@@ -11,7 +12,8 @@ import { RouterModule } from '@angular/router';
     CommonModule,
     MatCardModule,
     MatButtonModule,
-    RouterModule
+    RouterModule,
+    QRCodeSVGModule
   ],
   template: `
     <div class="container mx-auto px-4 py-8">
@@ -28,13 +30,7 @@ import { RouterModule } from '@angular/router';
             <h2 class="text-xl font-semibold mb-6 text-xtrim-purple">Código QR para Reservar Turno</h2>
             
             <div class="mb-6 flex justify-center">
-              <!-- Placeholder para el QR -->
-              <div class="border-2 border-xtrim-purple rounded-lg p-4 w-[220px] h-[220px] flex items-center justify-center">
-                <p class="text-center text-xtrim-purple">
-                  Código QR para: <br>
-                  <span class="font-mono text-xs break-all">{{qrValue}}</span>
-                </p>
-              </div>
+              <qrcode-svg [value]="qrValue" [width]="200" [height]="200"></qrcode-svg>
             </div>
             
             <p class="text-sm text-gray-500 text-center mb-4">
