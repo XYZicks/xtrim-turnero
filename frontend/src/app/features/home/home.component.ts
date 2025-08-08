@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { RouterModule } from '@angular/router';
-import { QRCodeSVGModule } from 'ngx-qrcode-svg';
+
 
 @Component({
   selector: 'app-home',
@@ -13,7 +13,7 @@ import { QRCodeSVGModule } from 'ngx-qrcode-svg';
     MatCardModule,
     MatButtonModule,
     RouterModule,
-    QRCodeSVGModule
+
   ],
   template: `
     <div class="container mx-auto px-4 py-8">
@@ -30,7 +30,11 @@ import { QRCodeSVGModule } from 'ngx-qrcode-svg';
             <h2 class="text-xl font-semibold mb-6 text-xtrim-purple">Código QR para Reservar Turno</h2>
             
             <div class="mb-6 flex justify-center">
-              <qrcode-svg [value]="qrValue" [width]="200" [height]="200"></qrcode-svg>
+              <img 
+                [src]="getQrImageUrl()" 
+                alt="Código QR" 
+                class="w-48 h-48 border border-gray-300 rounded"
+                (error)="onQrError($event)">
             </div>
             
             <p class="text-sm text-gray-500 text-center mb-4">
@@ -83,5 +87,17 @@ export class HomeComponent implements OnInit {
     // Generate QR code value with the current URL
     const baseUrl = window.location.origin;
     this.qrValue = `${baseUrl}/booking?branchId=${branchId}`;
+  }
+  
+  getQrImageUrl(): string {
+    if (!this.qrValue) return '';
+    // Usando QR Server API para generar el QR
+    return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(this.qrValue)}&bgcolor=ffffff&color=000000`;
+  }
+  
+  onQrError(event: any): void {
+    console.error('Error loading QR code:', event);
+    // Ocultar la imagen en caso de error
+    event.target.style.display = 'none';
   }
 }

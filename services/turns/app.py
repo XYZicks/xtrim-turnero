@@ -24,7 +24,7 @@ def create_app():
             r"/turns/*": {"origins": "http://localhost:4200"},
             r"/queue/*": {"origins": "http://localhost:4200"}
         },
-        methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
         allow_headers=["Content-Type", "Authorization"]
     )
 
