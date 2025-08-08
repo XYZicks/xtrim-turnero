@@ -3,11 +3,7 @@ import sys
 from dotenv import load_dotenv
 load_dotenv()
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
-
-from common.logger import configure_logger, logger
-
-configure_logger("agents")
+from logger_config import logger
 
 # Imports de Flask y extensiones
 from flask import Flask

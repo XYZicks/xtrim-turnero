@@ -5,7 +5,7 @@ from models.turn import Turn, TurnStatus, TurnType
 from db import db
 import random
 import string
-from common.logger import logger, log_process
+from logger_config import logger, log_process
 
 api = Namespace('turns', description='Turn operations')
 
