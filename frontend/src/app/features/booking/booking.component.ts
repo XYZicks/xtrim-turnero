@@ -49,8 +49,8 @@ import { CreateTurnRequest } from '../../core/models/turn.model';
               
               <div class="mb-4">
                 <mat-form-field appearance="outline" class="w-full">
-                  <mat-label>Motivo de Visita</mat-label>
-                  <mat-select formControlName="reason">
+                  <mat-label>Trámite</mat-label>
+                  <mat-select formControlName="reason" (selectionChange)="onReasonChange($event)">
                     <mat-option value="soporte_tecnico">Soporte Técnico</mat-option>
                     <mat-option value="facturacion">Facturación</mat-option>
                     <mat-option value="nuevos_servicios">Nuevos Servicios</mat-option>
@@ -58,9 +58,31 @@ import { CreateTurnRequest } from '../../core/models/turn.model';
                     <mat-option value="otro">Otro</mat-option>
                   </mat-select>
                   <mat-error *ngIf="bookingForm.get('reason')?.hasError('required')">
-                    El motivo de visita es requerido
+                    El trámite es requerido
                   </mat-error>
                 </mat-form-field>
+              </div>
+              
+              <div class="mb-4" *ngIf="subReasons.length > 0">
+                <mat-form-field appearance="outline" class="w-full">
+                  <mat-label>Sub-trámite</mat-label>
+                  <mat-select formControlName="sub_reason">
+                    <mat-option *ngFor="let sub of subReasons" [value]="sub.value">
+                      {{ sub.label }}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+              
+              <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2">Condición Especial</label>
+                <mat-radio-group formControlName="special_condition" class="flex flex-col space-y-2">
+                  <mat-radio-button value="ninguna" class="text-gray-700">Ninguna</mat-radio-button>
+                  <mat-radio-button value="embarazada" class="text-gray-700">Embarazada</mat-radio-button>
+                  <mat-radio-button value="adulto_mayor" class="text-gray-700">Adulto Mayor (+65)</mat-radio-button>
+                  <mat-radio-button value="discapacidad" class="text-gray-700">Persona con Discapacidad</mat-radio-button>
+                  <mat-radio-button value="nino_brazos" class="text-gray-700">Con Niño en Brazos</mat-radio-button>
+                </mat-radio-group>
               </div>
             </div>
             
@@ -112,8 +134,33 @@ import { CreateTurnRequest } from '../../core/models/turn.model';
 })
 export class BookingComponent implements OnInit {
   bookingForm: FormGroup;
+  subReasons: {value: string, label: string}[] = [];
   
   branchId = 1; // Default branch ID
+  
+  private subReasonMap: {[key: string]: {value: string, label: string}[]} = {
+    'soporte_tecnico': [
+      {value: 'internet', label: 'Problemas de Internet'},
+      {value: 'tv', label: 'Problemas de TV'},
+      {value: 'telefono', label: 'Problemas de Teléfono'},
+      {value: 'instalacion', label: 'Nueva Instalación'}
+    ],
+    'facturacion': [
+      {value: 'pago', label: 'Realizar Pago'},
+      {value: 'consulta', label: 'Consulta de Factura'},
+      {value: 'reclamo_cobro', label: 'Reclamo de Cobro'}
+    ],
+    'nuevos_servicios': [
+      {value: 'internet_nuevo', label: 'Contratar Internet'},
+      {value: 'tv_nuevo', label: 'Contratar TV'},
+      {value: 'paquete', label: 'Contratar Paquete'}
+    ],
+    'reclamos': [
+      {value: 'servicio', label: 'Reclamo de Servicio'},
+      {value: 'atencion', label: 'Reclamo de Atención'},
+      {value: 'facturacion_reclamo', label: 'Reclamo de Facturación'}
+    ]
+  };
   
   constructor(
     private fb: FormBuilder,
@@ -124,6 +171,8 @@ export class BookingComponent implements OnInit {
     this.bookingForm = this.fb.group({
       turn_type: ['normal', Validators.required],
       reason: ['', Validators.required],
+      sub_reason: [''],
+      special_condition: ['ninguna', Validators.required],
       customer_name: [''],
       customer_cedula: [''],
       customer_email: ['', [Validators.email]]
@@ -139,6 +188,13 @@ export class BookingComponent implements OnInit {
       }
       cedulaControl?.updateValueAndValidity();
     });
+    
+    // Auto-set preferential for special conditions
+    this.bookingForm.get('special_condition')?.valueChanges.subscribe(value => {
+      if (value !== 'ninguna') {
+        this.bookingForm.patchValue({turn_type: 'preferential'});
+      }
+    });
   }
   
   ngOnInit(): void {
@@ -147,6 +203,12 @@ export class BookingComponent implements OnInit {
     if (branchIdParam) {
       this.branchId = parseInt(branchIdParam, 10) || 1;
     }
+  }
+  
+  onReasonChange(event: any) {
+    const reason = event.value;
+    this.subReasons = this.subReasonMap[reason] || [];
+    this.bookingForm.patchValue({sub_reason: ''});
   }
   
   onSubmit() {

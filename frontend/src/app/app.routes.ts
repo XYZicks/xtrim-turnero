@@ -40,7 +40,11 @@ export const routes: Routes = [
     canActivate: [SupervisorGuard]
   },
   {
+    path: 'monitor',
+    loadComponent: () => import('./features/monitor/monitor.component').then(m => m.MonitorComponent)
+  },
+  {
     path: '**',
-    redirectTo: 'booking'
+    redirectTo: ''
   }
 ];

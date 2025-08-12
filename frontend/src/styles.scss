@@ -191,6 +191,43 @@ label, .mat-typography {
   margin-top: auto;
 }
 
+/* Responsive improvements */
+@media (max-width: 768px) {
+  .container {
+    padding: 8px;
+  }
+  
+  .content {
+    padding: 8px;
+  }
+  
+  .mat-mdc-form-field {
+    width: 100% !important;
+  }
+  
+  .grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .text-3xl {
+    font-size: 1.875rem;
+  }
+  
+  .text-xl {
+    font-size: 1.125rem;
+  }
+  
+  .p-6 {
+    padding: 1rem;
+  }
+  
+  .gap-8 {
+    gap: 1rem;
+  }
+}
+
 .container {
   padding: 16px;
   max-width: 1200px;

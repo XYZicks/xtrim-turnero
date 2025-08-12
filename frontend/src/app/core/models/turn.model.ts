@@ -4,6 +4,8 @@ export interface Turn {
   branch_id: number;
   turn_type: 'normal' | 'preferential';
   reason: string;
+  sub_reason?: string;
+  special_condition?: string;
   status: 'waiting' | 'attending' | 'completed' | 'abandoned';
   customer_name?: string;
   customer_cedula?: string;
@@ -12,6 +14,7 @@ export interface Turn {
   called_at?: string;
   completed_at?: string;
   agent_id?: number;
+  window_number?: number;
   estimated_wait?: number;
 }
 
@@ -19,6 +22,8 @@ export interface CreateTurnRequest {
   branch_id: number;
   turn_type: 'normal' | 'preferential';
   reason: string;
+  sub_reason?: string;
+  special_condition?: string;
   customer_name?: string;
   customer_cedula?: string;
   customer_email?: string;

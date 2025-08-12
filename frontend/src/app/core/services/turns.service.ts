@@ -29,4 +29,12 @@ export class TurnsService {
   getQueue(branchId: number): Observable<Queue> {
     return this.http.get<Queue>(`${this.queueUrl}/${branchId}`);
   }
+
+  getCalledTurns(): Observable<Turn[]> {
+    return this.http.get<Turn[]>(`${this.apiUrl}/called`);
+  }
+
+  callNextTurn(agentId: number): Observable<Turn> {
+    return this.http.post<Turn>(`${this.apiUrl}/call-next`, { agent_id: agentId });
+  }
 }
