@@ -30,7 +30,7 @@ import { CreateTurnRequest } from '../../core/models/turn.model';
       
       <div class="bg-white rounded-lg xtrim-shadow p-6">
         <form [formGroup]="bookingForm" (ngSubmit)="onSubmit()" class="space-y-6">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div>
               <h2 class="text-xl font-semibold mb-4 text-xtrim-purple">Información del Turno</h2>
               
@@ -119,7 +119,7 @@ import { CreateTurnRequest } from '../../core/models/turn.model';
             </div>
           </div>
           
-          <div class="flex justify-center mt-6">
+          <div class="flex justify-center mt-6 w-full">
             <button mat-raised-button color="primary" type="submit" 
                     [disabled]="bookingForm.invalid" 
                     class="px-8 py-2 bg-xtrim-purple text-white rounded-md hover:bg-opacity-90 transition-all">
