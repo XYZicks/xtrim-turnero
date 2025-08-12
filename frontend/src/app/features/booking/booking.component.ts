@@ -28,7 +28,7 @@ import { CreateTurnRequest } from '../../core/models/turn.model';
     <div class="container mx-auto px-4 py-8">
       <h1 class="text-3xl font-bold text-xtrim-purple mb-6">Reservar Turno</h1>
       
-      <div class="bg-white rounded-lg shadow-lg p-6">
+      <div class="bg-white rounded-lg xtrim-shadow p-6">
         <form [formGroup]="bookingForm" (ngSubmit)="onSubmit()" class="space-y-6">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>

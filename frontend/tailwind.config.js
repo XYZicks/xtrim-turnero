@@ -6,7 +6,13 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        'xtrim-purple': '#402063',
+        'xtrim-purple': '#3F1B6A',
+      },
+      fontFamily: {
+        'ubuntu': ['Ubuntu', 'sans-serif'],
+      },
+      boxShadow: {
+        'xtrim': '0 4px 8px 0 #B9BFCB',
       }
     },
   },

@@ -1,5 +1,6 @@
 /* You can add global styles to this file, and also import other style files */
 @use '@angular/material' as mat;
+@import url('https://fonts.googleapis.com/css2?family=Ubuntu:wght@300;400;500;700&display=swap');
 
 /* Tailwind CSS */
 @tailwind base;
@@ -8,16 +9,16 @@
 
 // Define the brand colors
 $xtrim-primary: (
-  50: lighten(#402063, 40%),
-  100: lighten(#402063, 35%),
-  200: lighten(#402063, 30%),
-  300: lighten(#402063, 25%),
-  400: lighten(#402063, 15%),
-  500: #402063, // Primary color - Morado Xtrim
-  600: darken(#402063, 5%),
-  700: darken(#402063, 10%),
-  800: darken(#402063, 15%),
-  900: darken(#402063, 20%),
+  50: lighten(#3F1B6A, 40%),
+  100: lighten(#3F1B6A, 35%),
+  200: lighten(#3F1B6A, 30%),
+  300: lighten(#3F1B6A, 25%),
+  400: lighten(#3F1B6A, 15%),
+  500: #3F1B6A, // Primary color - Morado Xtrim
+  600: darken(#3F1B6A, 5%),
+  700: darken(#3F1B6A, 10%),
+  800: darken(#3F1B6A, 15%),
+  900: darken(#3F1B6A, 20%),
   contrast: (
     50: rgba(black, 0.87),
     100: rgba(black, 0.87),
@@ -95,11 +96,99 @@ $xtrim-dark-theme: mat.define-dark-theme((
   color: white;
 }
 
-html, body { height: 100%; }
+html, body { 
+  height: 100%; 
+  font-family: 'Ubuntu', sans-serif;
+}
+
 body { 
   margin: 0; 
-  font-family: Roboto, "Helvetica Neue", sans-serif; 
+  font-family: 'Ubuntu', sans-serif; 
   background-color: #f5f5f5;
+}
+
+/* Custom Xtrim styles */
+.xtrim-shadow {
+  box-shadow: 0 4px 8px 0 #B9BFCB !important;
+}
+
+.bg-xtrim-purple {
+  background-color: #3F1B6A !important;
+}
+
+.text-xtrim-purple {
+  color: #3F1B6A !important;
+}
+
+.border-xtrim-purple {
+  border-color: #3F1B6A !important;
+}
+
+/* Material Design overrides */
+.mat-mdc-raised-button.mat-primary {
+  background-color: #3F1B6A !important;
+}
+
+/* Disabled button styles */
+.mat-mdc-raised-button.mat-primary:disabled,
+.mat-mdc-raised-button.mat-primary[disabled] {
+  background-color: #3F1B6A !important;
+  color: white !important;
+  opacity: 0.3 !important;
+}
+
+.mat-mdc-button:disabled,
+.mat-mdc-outlined-button:disabled,
+.mat-mdc-unelevated-button:disabled {
+  background-color: #3F1B6A !important;
+  color: white !important;
+  opacity: 0.3 !important;
+}
+
+.mat-mdc-form-field {
+  font-family: 'Ubuntu', sans-serif;
+}
+
+.mat-mdc-card {
+  box-shadow: 0 4px 8px 0 #B9BFCB !important;
+}
+
+/* Apply Ubuntu font to all Material components */
+.mat-mdc-button,
+.mat-mdc-raised-button,
+.mat-mdc-outlined-button,
+.mat-mdc-unelevated-button,
+.mat-mdc-icon-button,
+.mat-toolbar,
+.mat-mdc-form-field,
+.mat-mdc-input-element,
+.mat-mdc-select,
+.mat-mdc-option,
+.mat-mdc-radio-button,
+.mat-mdc-checkbox,
+.mat-mdc-card,
+.mat-mdc-card-title,
+.mat-mdc-card-content,
+.mat-mdc-snack-bar-container {
+  font-family: 'Ubuntu', sans-serif !important;
+}
+
+/* Ensure all text elements use Ubuntu */
+h1, h2, h3, h4, h5, h6,
+p, span, div, button,
+input, select, textarea,
+label, .mat-typography {
+  font-family: 'Ubuntu', sans-serif !important;
+}
+
+/* Footer styles */
+.xtrim-footer {
+  background-color: #3F1B6A;
+  color: white;
+  padding: 1rem;
+  text-align: center;
+  font-size: 0.875rem;
+  margin-top: auto;
 }
 
 .container {
@@ -161,6 +250,6 @@ body {
 }
 
 .page-title {
-  color: #402063;
+  color: #3F1B6A;
   margin-bottom: 24px;
 }

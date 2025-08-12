@@ -10,6 +10,7 @@ import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
 
 import { HeaderComponent } from './core/components/header/header.component';
+import { FooterComponent } from './core/components/footer/footer.component';
 
 import { selectDarkMode } from './store/ui/ui.selectors';
 import { toggleDarkMode } from './store/ui/ui.actions';
@@ -27,10 +28,11 @@ import { toggleDarkMode } from './store/ui/ui.actions';
     MatIconModule,
     MatSidenavModule,
     MatListModule,
-    HeaderComponent
+    HeaderComponent,
+    FooterComponent
   ],
   template: `
-    <div [class.dark-theme]="darkMode$ | async">
+    <div [class.dark-theme]="darkMode$ | async" class="app-container">
       <app-header></app-header>
       
       <div class="content">
@@ -41,14 +43,24 @@ import { toggleDarkMode } from './store/ui/ui.actions';
         </div>
         <router-outlet></router-outlet>
       </div>
+      
+      <app-footer></app-footer>
     </div>
   `,
   styles: [`
+    .app-container {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    
     .content {
+      flex: 1;
       padding: 16px;
       max-width: 1200px;
       margin: 0 auto;
       position: relative;
+      width: 100%;
     }
     
     .theme-toggle {

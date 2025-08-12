@@ -26,7 +26,7 @@ import { switchMap } from 'rxjs/operators';
   template: `
     <div class="container mx-auto px-4 py-8">
       <div class="max-w-md mx-auto">
-        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+        <div class="bg-white rounded-lg xtrim-shadow overflow-hidden">
           <!-- Ticket Header -->
           <div class="bg-xtrim-purple text-white p-6 text-center relative">
             <div class="absolute top-2 right-2" *ngIf="turn?.status === 'waiting'">

@@ -69,6 +69,16 @@ import { AuthService } from '../../services/auth.service';
     </mat-toolbar>
   `,
   styles: [`
+    mat-toolbar {
+      font-family: 'Ubuntu', sans-serif !important;
+    }
+    
+    mat-toolbar span,
+    mat-toolbar button,
+    mat-toolbar a {
+      font-family: 'Ubuntu', sans-serif !important;
+    }
+    
     @media (max-width: 768px) {
       mat-toolbar > div {
         flex-direction: column;

@@ -26,7 +26,7 @@ import { RouterModule } from '@angular/router';
         </div>
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div class="bg-white rounded-lg shadow-lg p-6 flex flex-col items-center justify-center">
+          <div class="bg-white rounded-lg xtrim-shadow p-6 flex flex-col items-center justify-center">
             <h2 class="text-xl font-semibold mb-6 text-xtrim-purple">Código QR para Reservar Turno</h2>
             
             <div class="mb-6 flex justify-center">
@@ -50,7 +50,7 @@ import { RouterModule } from '@angular/router';
             </button>
           </div>
           
-          <div class="bg-white rounded-lg shadow-lg p-6">
+          <div class="bg-white rounded-lg xtrim-shadow p-6">
             <h2 class="text-xl font-semibold mb-4 text-xtrim-purple">Acceso al Sistema</h2>
             
             <p class="text-gray-600 mb-6">

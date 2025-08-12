@@ -36,7 +36,7 @@ import { AuthService } from '../../core/services/auth.service';
           </p>
         </div>
         
-        <mat-card class="p-6 bg-white shadow-md rounded-lg">
+        <mat-card class="p-6 bg-white xtrim-shadow rounded-lg">
           <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-6">
             <div>
               <mat-form-field appearance="outline" class="w-full">
