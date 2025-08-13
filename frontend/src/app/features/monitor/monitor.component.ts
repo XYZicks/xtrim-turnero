@@ -42,6 +42,24 @@ import { switchMap } from 'rxjs/operators';
         <mat-icon>schedule</mat-icon>
         <p>No hay turnos llamados en este momento</p>
       </div>
+      
+      <div class="history-section">
+        <h2 class="history-title">TURNOS COMPLETADOS HOY</h2>
+        <div class="history-grid">
+          <div *ngFor="let turn of todayHistory" class="history-item">
+            <div class="history-ticket">{{ turn.ticket_number }}</div>
+            <div class="history-info">
+              <div class="history-service">{{ getReasonText(turn.reason) }}</div>
+              <div class="history-time">{{ turn.called_at | date:'HH:mm' }}</div>
+            </div>
+            <div class="history-module">{{ turn.assigned_module || 'N/A' }}</div>
+          </div>
+        </div>
+        
+        <div *ngIf="todayHistory.length === 0" class="no-history">
+          <p>No se han completado turnos hoy</p>
+        </div>
+      </div>
     </div>
   `,
   styles: [`
@@ -184,10 +202,81 @@ import { switchMap } from 'rxjs/operators';
         min-width: 100px;
       }
     }
+    
+    .history-section {
+      margin-top: 3rem;
+      border-top: 2px solid rgba(255,255,255,0.2);
+      padding-top: 2rem;
+    }
+    
+    .history-title {
+      font-size: 2rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      text-align: center;
+      color: #FFD700;
+    }
+    
+    .history-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1rem;
+    }
+    
+    .history-item {
+      background: rgba(255,255,255,0.05);
+      border-radius: 10px;
+      padding: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    
+    .history-ticket {
+      font-size: 1.5rem;
+      font-weight: 700;
+      min-width: 80px;
+      text-align: center;
+      background: rgba(255,255,255,0.1);
+      border-radius: 5px;
+      padding: 0.5rem;
+    }
+    
+    .history-info {
+      flex: 1;
+    }
+    
+    .history-service {
+      font-size: 1rem;
+      font-weight: 500;
+    }
+    
+    .history-time {
+      font-size: 0.9rem;
+      opacity: 0.8;
+    }
+    
+    .history-module {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #4CAF50;
+    }
+    
+    .no-history {
+      text-align: center;
+      padding: 2rem;
+      opacity: 0.6;
+    }
+    
+    .no-history p {
+      font-size: 1.2rem;
+      margin: 0;
+    }
   `]
 })
 export class MonitorComponent implements OnInit, OnDestroy {
   calledTurns: Turn[] = [];
+  todayHistory: Turn[] = [];
   currentTime = new Date();
   private refreshSubscription?: Subscription;
   private timeSubscription?: Subscription;
@@ -196,6 +285,7 @@ export class MonitorComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadCalledTurns();
+    this.loadTodayHistory();
     this.startPolling();
     this.startClock();
   }
@@ -220,6 +310,17 @@ export class MonitorComponent implements OnInit, OnDestroy {
     });
   }
 
+  private loadTodayHistory(): void {
+    this.turnsService.getBranchHistory(1).subscribe({
+      next: (history: any[]) => {
+        this.todayHistory = history.slice(0, 10); // Últimos 10 turnos
+      },
+      error: (error: any) => {
+        console.error('Error loading today history', error);
+      }
+    });
+  }
+
   private startPolling(): void {
     this.refreshSubscription = interval(3000).pipe(
       switchMap(() => this.turnsService.getCalledTurns())
@@ -230,6 +331,11 @@ export class MonitorComponent implements OnInit, OnDestroy {
       error: (error) => {
         console.error('Error refreshing turns', error);
       }
+    });
+    
+    // Refresh history every 30 seconds
+    interval(30000).subscribe(() => {
+      this.loadTodayHistory();
     });
   }
 

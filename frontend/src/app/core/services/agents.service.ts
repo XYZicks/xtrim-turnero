@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { Agent, CreateAgentRequest, UpdateAgentStatusRequest } from '../models/agent.model';
+import { Agent, CreateAgentRequest, UpdateAgentStatusRequest, UpdateAgentModuleRequest } from '../models/agent.model';
 
 @Injectable({
   providedIn: 'root'
@@ -37,5 +37,9 @@ export class AgentsService {
 
   updateAgentStatus(id: number, update: UpdateAgentStatusRequest): Observable<Agent> {
     return this.http.patch<Agent>(`${this.apiUrl}/${id}/status`, update);
+  }
+
+  updateAgentModule(id: number, update: UpdateAgentModuleRequest): Observable<Agent> {
+    return this.http.patch<Agent>(`${this.apiUrl}/${id}/module`, update);
   }
 }

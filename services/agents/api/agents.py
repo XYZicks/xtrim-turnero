@@ -30,8 +30,13 @@ agent_response = api.model('AgentResponse', {
     'branch_id': fields.Integer(description='Branch ID'),
     'status': fields.String(description='Agent status'),
     'unavailability_reason': fields.String(description='Reason for unavailability'),
+    'assigned_module': fields.String(description='Assigned module/desk'),
     'last_status_change': fields.DateTime(description='Last status change timestamp'),
     'created_at': fields.DateTime(description='Creation timestamp')
+})
+
+agent_module_model = api.model('AgentModule', {
+    'assigned_module': fields.String(required=False, description='Module/desk assignment (null to unassign)')
 })
 
 @api.route('')
@@ -121,5 +126,34 @@ class AgentStatusResource(Resource):
         
         db.session.commit()
         logger.info(f"Agent {id} status updated successfully")
+        
+        return agent.to_dict()
+
+@api.route('/<int:id>/module')
+@api.param('id', 'The agent identifier')
+class AgentModuleResource(Resource):
+    @api.doc('assign_module')
+    @api.expect(agent_module_model)
+    @api.marshal_with(agent_response)
+    @log_process
+    def patch(self, id):
+        """Assign or unassign a module/desk to an agent"""
+        agent = Agent.query.get_or_404(id)
+        data = request.json
+        module = data.get('assigned_module')
+        
+        logger.info(f"Assigning module '{module}' to agent {id}")
+        
+        # Check if module is already assigned to another agent
+        if module:
+            existing_agent = Agent.query.filter_by(assigned_module=module, branch_id=agent.branch_id).first()
+            if existing_agent and existing_agent.id != id:
+                api.abort(400, f"Module {module} is already assigned to agent {existing_agent.name}")
+        
+        agent.assigned_module = module
+        db.session.commit()
+        
+        action = "assigned" if module else "unassigned"
+        logger.info(f"Module {action} successfully for agent {id}")
         
         return agent.to_dict()

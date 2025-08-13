@@ -12,6 +12,7 @@ turn_in_queue = api.model('TurnInQueue', {
     'turn_type': fields.String(description='Turn type'),
     'reason': fields.String(description='Reason for visit'),
     'status': fields.String(description='Turn status'),
+    'customer_name': fields.String(description='Customer name'),
     'created_at': fields.DateTime(description='Creation timestamp'),
     'wait_time': fields.Integer(description='Wait time in minutes')
 })
@@ -61,6 +62,7 @@ class QueueResource(Resource):
                 'turn_type': turn.turn_type,
                 'reason': turn.reason,
                 'status': turn.status,
+                'customer_name': turn.customer_name,
                 'created_at': turn.created_at,
                 'wait_time': int((datetime.utcnow() - turn.created_at).total_seconds() / 60)
             }

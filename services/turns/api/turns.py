@@ -26,6 +26,7 @@ turn_response = api.model('TurnResponse', {
     'turn_type': fields.String(description='Turn type'),
     'reason': fields.String(description='Reason for visit'),
     'status': fields.String(description='Turn status'),
+    'assigned_module': fields.String(description='Assigned module/desk'),
     'created_at': fields.DateTime(description='Creation timestamp'),
     'estimated_wait': fields.Integer(description='Estimated wait time in minutes')
 })
@@ -34,6 +35,22 @@ turn_update = api.model('TurnUpdate', {
     'status': fields.String(required=True, enum=[TurnStatus.ATTENDING, TurnStatus.COMPLETED, TurnStatus.ABANDONED], 
                            description='New turn status'),
     'agent_id': fields.Integer(required=False, description='Agent ID')
+})
+
+turn_history = api.model('TurnHistory', {
+    'id': fields.Integer(description='Turn ID'),
+    'ticket_number': fields.String(description='Ticket number'),
+    'branch_id': fields.Integer(description='Branch ID'),
+    'turn_type': fields.String(description='Turn type'),
+    'reason': fields.String(description='Reason for visit'),
+    'status': fields.String(description='Turn status'),
+    'customer_name': fields.String(description='Customer name'),
+    'customer_cedula': fields.String(description='Customer cedula'),
+    'agent_id': fields.Integer(description='Agent ID'),
+    'assigned_module': fields.String(description='Assigned module/desk'),
+    'created_at': fields.DateTime(description='Creation timestamp'),
+    'called_at': fields.DateTime(description='Called timestamp'),
+    'completed_at': fields.DateTime(description='Completion timestamp')
 })
 
 @log_process
@@ -142,7 +159,17 @@ class TurnResource(Resource):
         # Update timestamps based on status
         if data['status'] == TurnStatus.ATTENDING:
             turn.called_at = datetime.utcnow()
-            turn.agent_id = data.get('agent_id')
+            agent_id = data.get('agent_id')
+            turn.agent_id = agent_id
+            
+            # For now, we'll set a default module assignment
+            # In a real implementation, this would query the agents service
+            if agent_id:
+                # Simple module assignment based on agent_id for demo
+                module_map = {1: 'M01', 2: 'M02'}
+                turn.assigned_module = module_map.get(agent_id, f'M{agent_id:02d}')
+                logger.info(f"Assigned module {turn.assigned_module} to turn {id}")
+                    
         elif data['status'] in [TurnStatus.COMPLETED, TurnStatus.ABANDONED]:
             turn.completed_at = datetime.utcnow()
         
@@ -150,3 +177,63 @@ class TurnResource(Resource):
         logger.info(f"Turn {id} updated successfully")
         
         return turn.to_dict()
+
+@api.route('/history/agent/<int:agent_id>')
+@api.param('agent_id', 'The agent identifier')
+class AgentTurnHistory(Resource):
+    @api.doc('get_agent_history')
+    @api.marshal_list_with(turn_history)
+    @log_process
+    def get(self, agent_id):
+        """Get turns attended by agent today"""
+        from datetime import date
+        today = date.today()
+        
+        turns = Turn.query.filter(
+            Turn.agent_id == agent_id,
+            Turn.status.in_([TurnStatus.COMPLETED, TurnStatus.ABANDONED]),
+            db.func.date(Turn.completed_at) == today
+        ).order_by(Turn.completed_at.desc()).all()
+        
+        logger.info(f"Retrieved {len(turns)} turns for agent {agent_id} today")
+        return [turn.to_dict() for turn in turns]
+
+@api.route('/history/branch/<int:branch_id>')
+@api.param('branch_id', 'The branch identifier')
+class BranchTurnHistory(Resource):
+    @api.doc('get_branch_history')
+    @api.marshal_list_with(turn_history)
+    @log_process
+    def get(self, branch_id):
+        """Get all turns completed in branch today"""
+        from datetime import date
+        today = date.today()
+        
+        turns = Turn.query.filter(
+            Turn.branch_id == branch_id,
+            Turn.status.in_([TurnStatus.COMPLETED, TurnStatus.ABANDONED]),
+            db.func.date(Turn.completed_at) == today
+        ).order_by(Turn.completed_at.desc()).all()
+        
+        logger.info(f"Retrieved {len(turns)} turns for branch {branch_id} today")
+        return [turn.to_dict() for turn in turns]
+
+@api.route('/current/agent/<int:agent_id>')
+@api.param('agent_id', 'The agent identifier')
+class AgentCurrentTurn(Resource):
+    @api.doc('get_agent_current_turn')
+    @api.marshal_with(turn_response)
+    @log_process
+    def get(self, agent_id):
+        """Get current turn being attended by agent"""
+        turn = Turn.query.filter(
+            Turn.agent_id == agent_id,
+            Turn.status == TurnStatus.ATTENDING
+        ).first()
+        
+        if turn:
+            logger.info(f"Retrieved current turn {turn.id} for agent {agent_id}")
+            return turn.to_dict()
+        else:
+            logger.info(f"No current turn for agent {agent_id}")
+            return None, 404

@@ -74,7 +74,7 @@ import { CreateTurnRequest } from '../../core/models/turn.model';
                 </mat-form-field>
               </div>
               
-              <div class="mb-4">
+              <div class="mb-4" *ngIf="bookingForm.get('turn_type')?.value === 'preferential'">
                 <label class="block text-gray-700 text-sm font-bold mb-2">Condición Especial</label>
                 <mat-radio-group formControlName="special_condition" class="flex flex-col space-y-2">
                   <mat-radio-button value="ninguna" class="text-gray-700">Ninguna</mat-radio-button>

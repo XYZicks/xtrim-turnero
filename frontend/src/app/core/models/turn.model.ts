@@ -14,6 +14,7 @@ export interface Turn {
   called_at?: string;
   completed_at?: string;
   agent_id?: number;
+  assigned_module?: string;
   window_number?: number;
   estimated_wait?: number;
 }

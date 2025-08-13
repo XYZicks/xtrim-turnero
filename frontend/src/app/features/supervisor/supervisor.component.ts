@@ -9,6 +9,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { CdkDragDrop, moveItemInArray, DragDropModule } from '@angular/cdk/drag-drop';
 import { Store } from '@ngrx/store';
 import { Observable, interval, Subscription } from 'rxjs';
@@ -19,6 +20,7 @@ import { selectQueue, selectTurnsLoading } from '../../store/turns/turns.selecto
 import { selectAllAgents, selectAgentsLoading } from '../../store/agents/agents.selectors';
 import { Queue, QueueItem } from '../../core/models/queue.model';
 import { Agent } from '../../core/models/agent.model';
+import { TurnsService } from '../../core/services/turns.service';
 
 @Component({
   selector: 'app-supervisor',
@@ -35,6 +37,7 @@ import { Agent } from '../../core/models/agent.model';
     MatSelectModule,
     MatProgressSpinnerModule,
     MatSnackBarModule,
+    MatDialogModule,
     DragDropModule
   ],
   template: `
@@ -127,6 +130,15 @@ import { Agent } from '../../core/models/agent.model';
                     <div *ngIf="agent.unavailability_reason" class="unavailability-reason">
                       {{ getReasonText(agent.unavailability_reason) }}
                     </div>
+                    <div class="agent-module">
+                      Módulo: {{ agent.assigned_module || 'N/A' }}
+                    </div>
+                  </div>
+                  <div class="agent-actions">
+                    <button mat-icon-button color="primary" (click)="assignModule(agent)" 
+                            [title]="'Asignar módulo'">
+                      <mat-icon>assignment</mat-icon>
+                    </button>
                   </div>
                 </div>
                 
@@ -138,6 +150,45 @@ import { Agent } from '../../core/models/agent.model';
           </mat-card-content>
         </mat-card>
       </div>
+      
+      <mat-card class="history-card">
+        <mat-card-header>
+          <mat-card-title>Historial del Día</mat-card-title>
+        </mat-card-header>
+        
+        <mat-card-content>
+          <div *ngIf="branchHistory.length === 0" class="no-history">
+            No se han completado turnos hoy
+          </div>
+          
+          <div class="history-table" *ngIf="branchHistory.length > 0">
+            <div class="history-header">
+              <div class="col">Ticket</div>
+              <div class="col">Cliente</div>
+              <div class="col">Agente</div>
+              <div class="col">Módulo</div>
+              <div class="col">Estado</div>
+              <div class="col">Hora</div>
+            </div>
+            
+            <div class="history-row" *ngFor="let turn of branchHistory">
+              <div class="col">{{ turn.ticket_number }}</div>
+              <div class="col">{{ turn.customer_name || 'N/A' }}</div>
+              <div class="col">{{ getAgentName(turn.agent_id) }}</div>
+              <div class="col">{{ turn.assigned_module || 'N/A' }}</div>
+              <div class="col">
+                <span [ngClass]="{
+                  'status-completed': turn.status === 'completed',
+                  'status-abandoned': turn.status === 'abandoned'
+                }">
+                  {{ turn.status === 'completed' ? 'Completado' : 'Abandonado' }}
+                </span>
+              </div>
+              <div class="col">{{ turn.called_at | date:'HH:mm' }}</div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
     </div>
   `,
   styles: [`
@@ -250,6 +301,7 @@ import { Agent } from '../../core/models/agent.model';
       padding: 8px;
       border: 1px solid #e0e0e0;
       border-radius: 4px;
+      gap: 8px;
     }
     
     .agent-status {
@@ -290,6 +342,17 @@ import { Agent } from '../../core/models/agent.model';
       color: rgba(0, 0, 0, 0.6);
     }
     
+    .agent-module {
+      font-size: 12px;
+      color: #3F1B6A;
+      font-weight: 500;
+    }
+    
+    .agent-actions {
+      display: flex;
+      gap: 4px;
+    }
+    
     .empty-agents {
       padding: 16px;
       text-align: center;
@@ -327,6 +390,51 @@ import { Agent } from '../../core/models/agent.model';
     .queue-list.cdk-drop-list-dragging .queue-item:not(.cdk-drag-placeholder) {
       transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
     }
+    
+    .history-card {
+      margin-top: 16px;
+      grid-column: 1 / -1;
+    }
+    
+    .history-table {
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    
+    .history-header {
+      display: flex;
+      background-color: #f5f5f5;
+      font-weight: 500;
+      padding: 8px;
+    }
+    
+    .history-row {
+      display: flex;
+      border-top: 1px solid #e0e0e0;
+      padding: 8px;
+    }
+    
+    .history-table .col {
+      flex: 1;
+      min-width: 80px;
+    }
+    
+    .status-completed {
+      color: #4caf50;
+      font-weight: 500;
+    }
+    
+    .status-abandoned {
+      color: #f44336;
+      font-weight: 500;
+    }
+    
+    .no-history {
+      padding: 16px;
+      text-align: center;
+      color: rgba(0, 0, 0, 0.6);
+    }
   `]
 })
 export class SupervisorComponent implements OnInit, OnDestroy {
@@ -335,13 +443,16 @@ export class SupervisorComponent implements OnInit, OnDestroy {
   turnsLoading$: Observable<boolean>;
   agentsLoading$: Observable<boolean>;
   private refreshSubscription?: Subscription;
+  branchHistory: any[] = [];
   
   // Mock branch ID for demo purposes
   branchId: number = 1;
   
   constructor(
     private store: Store,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private dialog: MatDialog,
+    private turnsService: TurnsService
   ) {
     this.queue$ = this.store.select(selectQueue);
     this.agents$ = this.store.select(selectAllAgents);
@@ -360,10 +471,12 @@ export class SupervisorComponent implements OnInit, OnDestroy {
     // Subscribe to agents changes for debugging
     this.agents$.subscribe(agents => {
       console.log('Supervisor: Agents data updated', agents);
+      this.agentsList = agents; // Guardar la lista para usar en getAgentName
     });
     
     // Initial data load
     this.refreshData();
+    this.loadBranchHistory();
     
     // Auto-refresh data every 5 seconds
     this.refreshSubscription = interval(5000).subscribe(() => {
@@ -381,6 +494,7 @@ export class SupervisorComponent implements OnInit, OnDestroy {
     console.log('Supervisor: Refreshing data for branch', this.branchId);
     this.store.dispatch(getQueue({ branchId: this.branchId }));
     this.store.dispatch(getAgents({ branchId: this.branchId }));
+    this.loadBranchHistory();
   }
   
   drop(event: CdkDragDrop<QueueItem[]>): void {
@@ -398,6 +512,39 @@ export class SupervisorComponent implements OnInit, OnDestroy {
         // In a real app, you would dispatch an action to update the queue order in the backend
       }
     });
+  }
+  
+  assignModule(agent: Agent): void {
+    const module = prompt(`Asignar módulo al agente ${agent.name}:`, agent.assigned_module || '');
+    
+    if (module !== null) {
+      // TODO: Implementar acción NgRx para asignar módulo
+      console.log(`Assigning module '${module}' to agent ${agent.id}`);
+      
+      this.snackBar.open(
+        module ? `Módulo '${module}' asignado a ${agent.name}` : `Módulo removido de ${agent.name}`,
+        'Cerrar',
+        { duration: 3000 }
+      );
+    }
+  }
+  
+  loadBranchHistory(): void {
+    this.turnsService.getBranchHistory(this.branchId).subscribe({
+      next: (history: any[]) => {
+        this.branchHistory = history;
+      },
+      error: (error: any) => {
+        console.error('Error loading branch history', error);
+      }
+    });
+  }
+  
+  private agentsList: Agent[] = [];
+  
+  getAgentName(agentId: number): string {
+    const agent = this.agentsList.find(a => a.id === agentId);
+    return agent ? agent.name : 'N/A';
   }
   
   getReasonText(reason: string): string {

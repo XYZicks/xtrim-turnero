@@ -30,6 +30,18 @@ export class TurnsService {
     return this.http.get<Queue>(`${this.queueUrl}/${branchId}`);
   }
 
+  getAgentHistory(agentId: number): Observable<Turn[]> {
+    return this.http.get<Turn[]>(`${this.apiUrl}/history/agent/${agentId}`);
+  }
+
+  getBranchHistory(branchId: number): Observable<Turn[]> {
+    return this.http.get<Turn[]>(`${this.apiUrl}/history/branch/${branchId}`);
+  }
+
+  getAgentCurrentTurn(agentId: number): Observable<Turn> {
+    return this.http.get<Turn>(`${this.apiUrl}/current/agent/${agentId}`);
+  }
+
   getCalledTurns(): Observable<Turn[]> {
     return this.http.get<Turn[]>(`${this.apiUrl}/called`);
   }

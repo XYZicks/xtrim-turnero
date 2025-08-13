@@ -21,6 +21,7 @@ import { selectCurrentAgent, selectAgentsLoading } from '../../store/agents/agen
 import { selectQueue, selectTurnsLoading } from '../../store/turns/turns.selectors';
 import { Agent } from '../../core/models/agent.model';
 import { Queue, QueueItem } from '../../core/models/queue.model';
+import { TurnsService } from '../../core/services/turns.service';
 
 @Component({
   selector: 'app-agent',
@@ -58,6 +59,13 @@ import { Queue, QueueItem } from '../../core/models/queue.model';
                 <span *ngIf="agent.unavailability_reason" class="reason">
                   ({{ getReasonText(agent.unavailability_reason) }})
                 </span>
+              </div>
+            </div>
+            
+            <div *ngIf="currentAgent$ | async as agent" class="module-info">
+              <div class="module-label">Módulo asignado:</div>
+              <div class="module-value">
+                {{ agent.assigned_module || 'N/A' }}
               </div>
             </div>
             
@@ -135,6 +143,34 @@ import { Queue, QueueItem } from '../../core/models/queue.model';
         </mat-card>
       </div>
       
+      <mat-card class="current-turn-card" *ngIf="currentTurn">
+        <mat-card-header>
+          <mat-card-title>Turno en Atención</mat-card-title>
+        </mat-card-header>
+        
+        <mat-card-content>
+          <div class="current-turn">
+            <div class="turn-info">
+              <div class="ticket-large">{{ currentTurn.ticket_number }}</div>
+              <div class="turn-details">
+                <div class="detail">Cliente: {{ currentTurn.customer_name || 'N/A' }}</div>
+                <div class="detail">Motivo: {{ currentTurn.reason }}</div>
+                <div class="detail">Módulo: {{ currentTurn.assigned_module }}</div>
+              </div>
+            </div>
+            
+            <div class="turn-actions">
+              <button mat-raised-button color="primary" (click)="completeTurn(currentTurn)">
+                <mat-icon>check</mat-icon> Completar
+              </button>
+              <button mat-raised-button color="warn" (click)="abandonCurrentTurn(currentTurn)">
+                <mat-icon>close</mat-icon> Abandono
+              </button>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+      
       <mat-card class="queue-list-card">
         <mat-card-header>
           <mat-card-title>Cola de Espera</mat-card-title>
@@ -162,6 +198,41 @@ import { Queue, QueueItem } from '../../core/models/queue.model';
                 <div class="col">{{ item.reason }}</div>
                 <div class="col">{{ item.wait_time }} min</div>
               </div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+      
+      <mat-card class="history-card">
+        <mat-card-header>
+          <mat-card-title>Historial del Día</mat-card-title>
+        </mat-card-header>
+        
+        <mat-card-content>
+          <div *ngIf="agentHistory.length === 0" class="no-history">
+            No has atendido turnos hoy
+          </div>
+          
+          <div class="history-table" *ngIf="agentHistory.length > 0">
+            <div class="history-header">
+              <div class="col">Ticket</div>
+              <div class="col">Cliente</div>
+              <div class="col">Estado</div>
+              <div class="col">Hora</div>
+            </div>
+            
+            <div class="history-row" *ngFor="let turn of agentHistory">
+              <div class="col">{{ turn.ticket_number }}</div>
+              <div class="col">{{ turn.customer_name || 'N/A' }}</div>
+              <div class="col">
+                <span [ngClass]="{
+                  'status-completed': turn.status === 'completed',
+                  'status-abandoned': turn.status === 'abandoned'
+                }">
+                  {{ turn.status === 'completed' ? 'Completado' : 'Abandonado' }}
+                </span>
+              </div>
+              <div class="col">{{ turn.called_at | date:'HH:mm' }}</div>
             </div>
           </div>
         </mat-card-content>
@@ -209,6 +280,27 @@ import { Queue, QueueItem } from '../../core/models/queue.model';
     .reason {
       font-size: 14px;
       color: rgba(0, 0, 0, 0.6);
+    }
+    
+    .module-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 16px;
+      padding: 12px;
+      background-color: #f5f5f5;
+      border-radius: 4px;
+    }
+    
+    .module-label {
+      font-weight: 500;
+      color: rgba(0, 0, 0, 0.7);
+    }
+    
+    .module-value {
+      font-weight: 600;
+      color: #3F1B6A;
+      font-size: 18px;
     }
     
     .status-form {
@@ -260,6 +352,10 @@ import { Queue, QueueItem } from '../../core/models/queue.model';
     
     .turn-actions {
       display: flex;
+      gap: 12px;
+    }
+    
+    .next-turn .turn-actions {
       justify-content: space-between;
     }
     
@@ -318,6 +414,69 @@ import { Queue, QueueItem } from '../../core/models/queue.model';
       padding: 32px;
     }
     
+    .history-card {
+      margin-top: 16px;
+    }
+    
+    .history-table {
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    
+    .history-header {
+      display: flex;
+      background-color: #f5f5f5;
+      font-weight: 500;
+      padding: 8px;
+    }
+    
+    .history-row {
+      display: flex;
+      border-top: 1px solid #e0e0e0;
+      padding: 8px;
+    }
+    
+    .status-completed {
+      color: #4caf50;
+      font-weight: 500;
+    }
+    
+    .status-abandoned {
+      color: #f44336;
+      font-weight: 500;
+    }
+    
+    .no-history {
+      padding: 16px;
+      text-align: center;
+      color: rgba(0, 0, 0, 0.6);
+    }
+    
+    .current-turn-card {
+      margin-bottom: 16px;
+      border: 2px solid #4caf50;
+    }
+    
+    .current-turn {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px;
+    }
+    
+    .ticket-large {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #4caf50;
+      margin-bottom: 8px;
+    }
+    
+    .turn-details .detail {
+      margin-bottom: 4px;
+      font-size: 14px;
+    }
+    
     @media (max-width: 768px) {
       .agent-container {
         grid-template-columns: 1fr;
@@ -332,6 +491,8 @@ export class AgentComponent implements OnInit {
   agentsLoading$: Observable<boolean>;
   turnsLoading$: Observable<boolean>;
   nextTurn: QueueItem | null = null;
+  currentTurn: any = null;
+  agentHistory: any[] = [];
   
   // Mock agent ID for demo purposes
   agentId: number = 1;
@@ -341,7 +502,8 @@ export class AgentComponent implements OnInit {
     private fb: FormBuilder,
     private store: Store,
     private snackBar: MatSnackBar,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private turnsService: TurnsService
   ) {
     this.statusForm = this.fb.group({
       status: ['disponible', Validators.required],
@@ -360,6 +522,11 @@ export class AgentComponent implements OnInit {
     
     // Load queue data
     this.refreshQueue();
+    
+    // Load agent history
+    this.loadAgentHistory();
+    
+    // No cargar turno actual al inicio, solo cuando se atiende uno
     
     // Auto-refresh queue every 10 seconds
     interval(10000).pipe(
@@ -422,6 +589,15 @@ export class AgentComponent implements OnInit {
       }
     }));
     
+    // Establecer este turno como el turno actual
+    this.currentTurn = {
+      id: turn.id,
+      ticket_number: turn.ticket_number,
+      customer_name: turn.customer_name,
+      reason: turn.reason,
+      assigned_module: 'M01' // Se asignará desde el backend
+    };
+    
     this.snackBar.open(`Atendiendo turno ${turn.ticket_number}`, 'Cerrar', {
       duration: 3000
     });
@@ -443,6 +619,56 @@ export class AgentComponent implements OnInit {
     });
     
     this.refreshQueue();
+    this.loadAgentHistory();
+  }
+  
+  loadAgentHistory(): void {
+    this.turnsService.getAgentHistory(this.agentId).subscribe({
+      next: (history: any[]) => {
+        this.agentHistory = history;
+      },
+      error: (error: any) => {
+        console.error('Error loading agent history', error);
+      }
+    });
+  }
+  
+  // Método removido - ya no necesitamos cargar automáticamente
+  
+  completeTurn(turn: any): void {
+    this.store.dispatch(updateTurn({
+      id: turn.id,
+      update: {
+        status: 'completed'
+      }
+    }));
+    
+    this.snackBar.open(`Turno ${turn.ticket_number} completado`, 'Cerrar', {
+      duration: 3000
+    });
+    
+    // Limpiar el turno actual
+    this.currentTurn = null;
+    this.refreshQueue();
+    this.loadAgentHistory();
+  }
+  
+  abandonCurrentTurn(turn: any): void {
+    this.store.dispatch(updateTurn({
+      id: turn.id,
+      update: {
+        status: 'abandoned'
+      }
+    }));
+    
+    this.snackBar.open(`Turno ${turn.ticket_number} abandonado`, 'Cerrar', {
+      duration: 3000
+    });
+    
+    // Limpiar el turno actual
+    this.currentTurn = null;
+    this.refreshQueue();
+    this.loadAgentHistory();
   }
   
   getReasonText(reason: string): string {

@@ -70,11 +70,19 @@ import { switchMap } from 'rxjs/operators';
               <div class="font-semibold">{{ turn?.created_at | date:'dd/MM/yyyy HH:mm' }}</div>
             </div>
             
+            <div class="flex items-center justify-between mb-4" *ngIf="turn?.assigned_module">
+              <div class="text-gray-600">Módulo:</div>
+              <div class="font-semibold text-xtrim-purple">{{ turn?.assigned_module }}</div>
+            </div>
+            
             <div *ngIf="turn?.status === 'attending'" class="mt-6 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-400">
               <div class="text-center text-blue-800">
                 <mat-icon class="align-middle mr-2 animate-pulse">person</mat-icon>
                 <span class="font-semibold">¡Su turno está siendo atendido!</span>
-                <div class="text-sm mt-1">Diríjase al mostrador correspondiente</div>
+                <div class="text-sm mt-1" *ngIf="!turn?.assigned_module">Diríjase al mostrador correspondiente</div>
+                <div class="text-sm mt-1" *ngIf="turn?.assigned_module">
+                  <strong>Diríjase al módulo: {{ turn?.assigned_module }}</strong>
+                </div>
               </div>
             </div>
             

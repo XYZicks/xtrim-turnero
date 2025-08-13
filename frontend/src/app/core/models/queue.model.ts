@@ -6,6 +6,7 @@ export interface QueueItem {
   turn_type: 'normal' | 'preferential';
   reason: string;
   status: 'waiting' | 'attending' | 'completed' | 'abandoned';
+  customer_name?: string;
   created_at: string;
   wait_time: number;
 }

@@ -26,6 +26,7 @@ class Agent(db.Model):
     branch_id = db.Column(db.Integer, nullable=False)
     status = db.Column(db.String(20), nullable=False, default=AgentStatus.AVAILABLE)
     unavailability_reason = db.Column(db.String(50), nullable=True)
+    assigned_module = db.Column(db.String(20), nullable=True)  # Módulo/Mesa asignada
     last_status_change = db.Column(db.DateTime, default=datetime.utcnow)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
@@ -44,6 +45,7 @@ class Agent(db.Model):
             'branch_id': self.branch_id,
             'status': self.status,
             'unavailability_reason': self.unavailability_reason,
+            'assigned_module': self.assigned_module,
             'last_status_change': self.last_status_change.isoformat() if self.last_status_change else None,
             'created_at': self.created_at.isoformat() if self.created_at else None
         }
