@@ -105,7 +105,7 @@ import { Metrics, Report } from '../../core/models/report.model';
         </mat-card>
       </div>
       
-      <div *ngIf="metrics$ | async as metrics">
+      <div *ngIf="fakeMetrics as metrics">
         <div class="metrics-grid">
           <mat-card class="metric-card">
             <div class="metric-value">{{ metrics.total_turns }}</div>
@@ -266,6 +266,7 @@ export class ReportsComponent implements OnInit {
   loading$: Observable<boolean>;
   error$: Observable<any>;
   hasMetrics: boolean = false;
+  fakeMetrics: any = null;
   displayedColumns: string[] = ['report_date', 'total_turns', 'completed_turns', 'abandoned_turns', 'avg_wait_time', 'avg_service_time'];
   
   constructor(
@@ -287,19 +288,51 @@ export class ReportsComponent implements OnInit {
     this.metrics$.subscribe(metrics => {
       this.hasMetrics = !!metrics;
     });
+    
+    // Load live metrics on init
+    this.loadLiveMetrics();
+  }
+  
+  loadLiveMetrics(): void {
+    // Load with default date range (last 7 days)
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - 7);
+    
+    const params = new URLSearchParams();
+    params.append('branch_id', '1');
+    params.append('start_date', this.formatDateForApi(startDate));
+    params.append('end_date', this.formatDateForApi(endDate));
+    
+    fetch(`http://localhost:5002/reports/live-metrics?${params.toString()}`)
+      .then(response => response.json())
+      .then(data => {
+        this.fakeMetrics = data;
+        this.hasMetrics = true;
+      })
+      .catch(error => {
+        console.error('Error loading live metrics:', error);
+      });
   }
   
   onSubmit(): void {
     if (this.filterForm.valid) {
       const formValues = this.filterForm.value;
       
-      const params = {
-        branch_id: formValues.branch_id,
-        start_date: this.formatDateForApi(formValues.start_date),
-        end_date: this.formatDateForApi(formValues.end_date)
-      };
+      const params = new URLSearchParams();
+      if (formValues.branch_id) params.append('branch_id', formValues.branch_id.toString());
+      params.append('start_date', this.formatDateForApi(formValues.start_date));
+      params.append('end_date', this.formatDateForApi(formValues.end_date));
       
-      this.store.dispatch(getMetrics({ params }));
+      fetch(`http://localhost:5002/reports/live-metrics?${params.toString()}`)
+        .then(response => response.json())
+        .then(data => {
+          this.fakeMetrics = data;
+          this.hasMetrics = true;
+        })
+        .catch(error => {
+          console.error('Error loading metrics:', error);
+        });
     }
   }
   

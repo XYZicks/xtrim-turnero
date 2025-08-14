@@ -145,3 +145,110 @@ class MetricsResource(Resource):
         
         logger.info(f"Metrics generated successfully: total_turns={total_turns}, completed={completed_turns}, abandoned={abandoned_turns}")
         return result
+
+@api.route('/live-metrics')
+class LiveMetricsResource(Resource):
+    @api.doc('get_live_metrics')
+    @log_process
+    def get(self):
+        """Get live metrics from turns table"""
+        from datetime import date, datetime
+        import requests
+        
+        # Parse parameters
+        branch_id = request.args.get('branch_id', '1')
+        start_date = request.args.get('start_date')
+        end_date = request.args.get('end_date')
+        
+        try:
+            # Get turns from turns service
+            turns_response = requests.get(f'http://turns-service:5000/turns/history/branch/{branch_id}')
+            if turns_response.status_code != 200:
+                logger.error(f"Failed to get turns data: {turns_response.status_code}")
+                return {'error': 'Failed to get turns data'}, 500
+            
+            all_turns = turns_response.json()
+            
+            # Filter by date range if provided, otherwise show all
+            turns = all_turns
+            if start_date and end_date:
+                try:
+                    start_dt = datetime.strptime(start_date, '%Y-%m-%d').date()
+                    end_dt = datetime.strptime(end_date, '%Y-%m-%d').date()
+                    
+                    filtered_turns = []
+                    for turn in all_turns:
+                        # Use created_at for filtering
+                        date_field = turn.get('created_at')
+                        if date_field:
+                            try:
+                                turn_date = datetime.fromisoformat(date_field.replace('Z', '+00:00')).date()
+                                if start_dt <= turn_date <= end_dt:
+                                    filtered_turns.append(turn)
+                            except:
+                                continue
+                    turns = filtered_turns
+                except:
+                    # If date parsing fails, show all turns
+                    turns = all_turns
+            
+            logger.info(f"Retrieved {len(turns)} turns for live metrics (filtered from {len(all_turns)}) for date range {start_date} to {end_date}")
+            
+            # Calculate metrics
+            total_turns = len(turns)
+            completed_turns = len([t for t in turns if t['status'] == 'completed'])
+            abandoned_turns = len([t for t in turns if t['status'] == 'abandoned'])
+            
+            abandonment_rate = 0
+            if total_turns > 0:
+                abandonment_rate = (abandoned_turns / total_turns) * 100
+            
+            # Calculate average times (convert from seconds to minutes)
+            wait_times = []
+            service_times = []
+            
+            for turn in turns:
+                if turn.get('called_at') and turn.get('created_at'):
+                    created = datetime.fromisoformat(turn['created_at'].replace('Z', '+00:00'))
+                    called = datetime.fromisoformat(turn['called_at'].replace('Z', '+00:00'))
+                    wait_time = (called - created).total_seconds() / 60
+                    if wait_time > 0:
+                        wait_times.append(wait_time)
+                
+                if turn.get('completed_at') and turn.get('called_at'):
+                    called = datetime.fromisoformat(turn['called_at'].replace('Z', '+00:00'))
+                    completed = datetime.fromisoformat(turn['completed_at'].replace('Z', '+00:00'))
+                    service_time = (completed - called).total_seconds() / 60
+                    if service_time > 0:
+                        service_times.append(service_time)
+            
+            avg_wait_time = sum(wait_times) / len(wait_times) if wait_times else 0
+            avg_service_time = sum(service_times) / len(service_times) if service_times else 0
+            
+            # Count unique customers
+            unique_customers = len(set(t['customer_name'] for t in turns if t.get('customer_name')))
+            
+            result = {
+                'total_turns': total_turns,
+                'completed_turns': completed_turns,
+                'abandoned_turns': abandoned_turns,
+                'abandonment_rate': round(abandonment_rate, 2),
+                'avg_wait_time': round(avg_wait_time, 2),
+                'avg_service_time': round(avg_service_time, 2),
+                'unique_customers': unique_customers,
+                'daily_metrics': [{
+                    'report_date': end_date or date.today().isoformat(),
+                    'total_turns': total_turns,
+                    'completed_turns': completed_turns,
+                    'abandoned_turns': abandoned_turns,
+                    'avg_wait_time': round(avg_wait_time, 2),
+                    'avg_service_time': round(avg_service_time, 2)
+                }]
+            }
+            
+            logger.info(f"Live metrics generated: total={total_turns}, completed={completed_turns}")
+            return result
+            
+        except Exception as e:
+            logger.error(f"Error generating live metrics: {str(e)}")
+            return {'error': 'Internal server error'}, 500
